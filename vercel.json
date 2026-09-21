@@ -4,12 +4,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/generar-rubrica",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/api/health",
-      "destination": "/api/index.py"
+      "source": "/api/(.*)",
+      "destination": "/api"
     },
     {
       "source": "/(.*)",
@@ -21,8 +17,5 @@
       "runtime": "@vercel/python@4.3.0",
       "maxDuration": 30
     }
-  },
-  "env": {
-    "NEBIUS_API_KEY": "@nebius-api-key"
   }
 }

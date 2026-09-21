@@ -1,17 +1,98 @@
 # Arquitecto de Rúbricas Musicales
 
-Aplicación web para generar rúbricas de evaluación de las Enseñanzas Profesionales de Música en Extremadura, España (Decreto 58/2022).
+Aplicación web para generar rúbricas de evaluación de las Enseñanzas Artísticas de Música en Extremadura, España, basada en los Decretos 110/2007, 111/2007 y 54/2022.
 
-## Características
+## 🎯 Características
 
-- **Modo Local**: Rúbricas predefinidas basadas en el currículo oficial
-- **Modo IA**: Generación dinámica con Qwen 3.0 a través de Nebius Token Factory
-- **7 Asignaturas**: Lenguaje Musical, Instrumento Principal, Coro, Música de Cámara, Armonía, Historia de la Música, Coro/Instrumento Complementario
-- **4 Niveles de Logro**: Inicial, En Desarrollo, Adquirido, Avanzado
+- **Dos niveles de enseñanza**: Enseñanzas Elementales y Profesionales
+- **Tres decretos oficiales**: 110/2007, 111/2007 y 54/2022 de Extremadura
+- **Generación dual**: Modo local (datos predefinidos) y modo IA (Qwen 3.0)
 - **Exportación múltiple**: Excel (XLSX), Word (DOCX) y PDF
-- **Impresión**: Optimizada para impresión directa desde el navegador
+- **7 asignaturas**: Lenguaje Musical, Instrumento Principal, Coro, Música de Cámara, Armonía, Historia de la Música, Instrumento Complementario
 
-## Estructura del Proyecto
+## 🚀 Despliegue en Vercel
+
+### Paso 1: Preparar el repositorio
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/TU_USUARIO/mi-agente-rubricas.git
+cd mi-agente-rubricas
+
+# Instalar dependencias
+npm install
+
+# Verificar que funciona localmente
+npm run dev
+```
+
+### Paso 2: Configurar Vercel
+
+1. **Crear cuenta en Vercel**: [https://vercel.com](https://vercel.com)
+
+2. **Importar proyecto desde GitHub**:
+   - Ve a [https://vercel.com/new](https://vercel.com/new)
+   - Selecciona tu repositorio de GitHub
+   - Vercel detectará automáticamente que es un proyecto Vite
+
+3. **Configurar variables de entorno**:
+   - En el dashboard de Vercel, ve a **Settings** → **Environment Variables**
+   - Añade la variable `NEBIUS_API_KEY` con tu clave de API de Nebius Token Factory
+   - Obtén tu API key en: [https://nebius.com/services/token-factory](https://nebius.com/services/token-factory)
+
+4. **Desplegar**:
+   - Haz clic en **Deploy**
+   - Vercel construirá automáticamente el proyecto
+
+### Paso 3: Verificar el despliegue
+
+Una vez desplegado, tu aplicación estará disponible en:
+- **Frontend**: `https://tu-proyecto.vercel.app`
+- **API Health Check**: `https://tu-proyecto.vercel.app/api/health`
+- **Generar Rúbrica**: `https://tu-proyecto.vercel.app/api/generar-rubrica`
+
+## 🛠️ Desarrollo Local
+
+### Requisitos
+
+- Node.js 18+ 
+- Python 3.9+
+- npm o yarn
+
+### Instalación
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/TU_USUARIO/mi-agente-rubricas.git
+cd mi-agente-rubricas
+
+# Instalar dependencias de Node.js
+npm install
+
+# Instalar dependencias de Python
+pip install -r requirements.txt
+
+# Configurar variables de entorno
+cp .env.example .env
+# Edita .env y añade tu NEBIUS_API_KEY
+
+# Iniciar servidor de desarrollo
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:3000`
+
+### Comandos disponibles
+
+```bash
+# Desarrollo
+npm run dev          # Inicia el servidor de desarrollo
+npm run build        # Construye para producción
+npm run preview      # Previsualiza la build de producción
+npm run typecheck    # Verifica tipos TypeScript
+```
+
+## 📋 Estructura del Proyecto
 
 ```
 mi-agente-rubricas/
@@ -20,224 +101,104 @@ mi-agente-rubricas/
 ├── src/
 │   ├── App.tsx               # Componente principal React
 │   ├── components/
-│   │   └── RubricRenderer.tsx  # Renderizador de rúbricas generadas por IA
+│   │   ├── ExportButtons.tsx     # Botones de exportación
+│   │   └── RubricRenderer.tsx    # Renderizador de rúbricas IA
 │   ├── data/
-│   │   └── curriculum.ts       # Datos del currículo oficial (Decreto 58/2022)
+│   │   └── curriculum.ts         # Datos del currículo oficial
 │   ├── services/
-│   │   └── api.ts              # Servicio de comunicación con API FastAPI
-│   ├── index.css               # Estilos globales con Tailwind CSS
-│   ├── main.tsx                # Punto de entrada React
-│   └── vite-env.d.ts           # Tipos de Vite
-├── index.html                  # HTML principal
-├── vercel.json                 # Configuración de Vercel
-├── requirements.txt            # Dependencias Python (FastAPI)
-├── .env.example                # Ejemplo de variables de entorno
-├── package.json                # Dependencias Node.js
-├── tsconfig.json               # Configuración TypeScript
-└── vite.config.js              # Configuración Vite
+│   │   ├── api.ts                # Servicio de comunicación con API
+│   │   └── exportService.ts      # Servicio de exportación
+│   ├── index.css
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── index.html
+├── package.json
+├── requirements.txt          # Dependencias Python
+├── tsconfig.json
+├── vercel.json               # Configuración de Vercel
+└── vite.config.js
 ```
 
-## Configuración
+## 📚 Marco Normativo
 
-### Variables de Entorno
+### Decreto 110/2007, de 22 de mayo
+Regula el currículo de las **Enseñanzas Elementales de Música**:
+- Duración: 4 cursos
+- Asignaturas: Lenguaje Musical, Instrumento, Coro (3º y 4º)
+- Evaluación: "Apto" / "No Apto"
 
-Crea un archivo `.env` en la raíz del proyecto:
+### Decreto 54/2022, de 18 de mayo
+Modifica el Decreto 110/2007:
+- Adaptación a la LOMLOE
+- Incorporación de la especialidad de Órgano
 
-```env
-NEBIUS_API_KEY=tu_api_key_de_nebius
-VITE_API_URL=  # Dejar vacío para producción (Vercel)
-```
+### Decreto 111/2007, de 22 de mayo
+Establece el currículo de las **Enseñanzas Profesionales de Música**:
+- Duración: 6 cursos
+- Asignaturas comunes: Instrumento, Música de Cámara, Coro, Lenguaje Musical
+- Otras: Armonía, Historia de la Música, Instrumento Complementario
+- Evaluación: Inicial, En Desarrollo, Adquirido, Avanzado
 
-### Backend (FastAPI)
+## 🔧 Tecnologías
 
-El backend utiliza:
-- **FastAPI** para la API REST
-- **OpenAI SDK** para comunicarse con Nebius Token Factory
-- **Qwen 3.0** (Qwen3-30B-A3B-Instruct-2507) como modelo de IA generativa
-
-**Endpoints:**
-- `POST /api/generar-rubrica` - Genera una rúbrica personalizada
-- `GET /api/health` - Estado del servicio
-
-**Nota importante:** En Vercel, las funciones Python en el directorio `api/` montan automáticamente las rutas con el prefijo `/api/`. Por lo tanto, las rutas definidas en el código son relativas a esa base.
-
-### Frontend (React + Vite)
-
-El frontend utiliza:
+### Frontend
 - **React 18** con TypeScript
 - **Tailwind CSS v4** para estilos
 - **Vite** como build tool
+- **SheetJS** para exportación Excel
+- **docx** para exportación Word
+- **jsPDF** para exportación PDF
 
-### Módulo de Exportación
+### Backend
+- **FastAPI** para la API REST
+- **Python 3.9+**
+- **OpenAI SDK** para comunicación con Nebius
+- **Qwen 3.0** (Qwen3-30B-A3B-Instruct-2507)
 
-El sistema incluye un módulo completo de exportación de informes en tres formatos:
+### Despliegue
+- **Vercel** para hosting y serverless functions
 
-- **Excel (XLSX)**: Generado con SheetJS. Incluye todas las secciones de la rúbrica en formato tabular con anchos de columna optimizados.
-- **Word (DOCX)**: Generado con la librería `docx`. Documento formateado con tablas, estilos y estructura profesional.
-- **PDF**: Generado con jsPDF + autotable. Documento con paginación automática, tablas estilizadas y formato A4.
+## 🐛 Solución de Problemas
 
-**Code-Splitting**: Las librerías de exportación se cargan dinámicamente (lazy loading) para optimizar el rendimiento de la aplicación principal.
+### Error: "NEBIUS_API_KEY not found"
+- Verifica que la variable de entorno esté configurada en Vercel
+- En desarrollo local, asegúrate de tener un archivo `.env` con la clave
 
-## Despliegue en Vercel
-
-### 1. Preparar el repositorio
-
+### Error: "Module not found"
 ```bash
-git init
-git add .
-git commit -m "Arquitecto de Rúbricas Musicales con Qwen y Nebius"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/mi-agente-rubricas.git
-git push -u origin main
-```
-
-### 2. Configurar Vercel
-
-1. Importa el repositorio en [Vercel](https://vercel.com)
-2. Añade la variable de entorno `NEBIUS_API_KEY` en el panel de Vercel:
-   - Ve a Settings → Environment Variables
-   - Añade `NEBIUS_API_KEY` con tu clave de Nebius Token Factory
-3. Despliega el proyecto
-
-### 3. Probar la API
-
-```bash
-curl -X POST https://tu-proyecto.vercel.app/api/generar-rubrica \
-  -H "Content-Type: application/json" \
-  -d '{"asignatura": "Orquesta", "curso": "3º"}'
-```
-
-## Desarrollo Local
-
-### Frontend
-
-```bash
-# Instalar dependencias
+# Reinstalar dependencias
+rm -rf node_modules package-lock.json
 npm install
-
-# Ejecutar en modo desarrollo
-npm run dev
-
-# Construir para producción
-npm run build
 ```
 
-### Backend (opcional para desarrollo local)
+### Error de build en Vercel
+- Verifica que `package.json` tenga el script `build`
+- Asegúrate de que `vercel.json` esté en la raíz del repositorio
+- Revisa los logs de build en el dashboard de Vercel
 
-```bash
-# Crear entorno virtual
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+### La API no responde
+- Verifica que `requirements.txt` esté en la raíz
+- Comprueba que `api/index.py` exista
+- Revisa los logs de la función serverless en Vercel
 
-# Instalar dependencias
-pip install -r requirements.txt
+## 📝 Licencia
 
-# Ejecutar el servidor
-uvicorn api.index:app --reload
-```
+Este proyecto es de código abierto y está disponible bajo la licencia MIT.
 
-## Arquitectura Técnica
+## 🤝 Contribuciones
 
-### Flujo de Datos
+Las contribuciones son bienvenidas. Por favor:
 
-1. **Modo Local:**
-   - Usuario selecciona asignatura y curso
-   - Frontend genera rúbrica desde datos predefinidos (`curriculum.ts`)
-   - No requiere conexión a API
+1. Haz fork del proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
-2. **Modo IA:**
-   - Usuario selecciona asignatura y curso (o escribe personalizados)
-   - Frontend envía petición a `/api/generar-rubrica`
-   - Vercel reescribe la ruta a `api/index.py`
-   - FastAPI procesa la petición y llama a Nebius Token Factory
-   - Qwen 3.0 genera la rúbrica personalizada
-   - Frontend renderiza la rúbrica con formato markdown
+## 📧 Contacto
 
-### Tecnologías
+Para preguntas o soporte, abre un issue en GitHub.
 
-- **Frontend:** React 18, TypeScript, Tailwind CSS v4, Vite
-- **Backend:** FastAPI, Python 3.9+
-- **IA:** Qwen 3.0 (Qwen3-30B-A3B-Instruct-2507) via Nebius Token Factory
-- **Exportación:** SheetJS (XLSX), docx (Word), jsPDF + autotable (PDF)
-- **Despliegue:** Vercel (frontend + serverless functions)
+---
 
-## Marco Normativo
-
-La herramienta se basa en los siguientes decretos oficiales de la Comunidad Autónoma de Extremadura:
-
-### Decreto 110/2007, de 22 de mayo
-Regula el currículo de las **Enseñanzas Elementales de Música** de régimen especial. Establece:
-- **Duración**: 4 cursos académicos
-- **Asignaturas**: Lenguaje Musical, Instrumento, y Coro (en 3º y 4º)
-- **Especialidades instrumentales**: 23 especialidades incluyendo Piano, Guitarra, Violín, Voz, etc.
-- **Evaluación**: "Apto" / "No Apto"
-- **Certificación**: Certificado de Enseñanzas Elementales
-
-### Decreto 54/2022, de 18 de mayo
-Modifica el Decreto 110/2007 adaptándolo a la **LOMLOE** (Ley Orgánica 3/2020). Principales cambios:
-- Incorporación de la especialidad de **Órgano**
-- Adaptación de las competencias al nuevo marco educativo
-- Actualización de los criterios de evaluación
-
-### Decreto 111/2007, de 22 de mayo
-Establece el currículo de las **Enseñanzas Profesionales de Música** de régimen especial. Define:
-- **Duración**: 6 cursos académicos
-- **Asignaturas comunes**: Instrumento principal, Música de Cámara, Coro, Lenguaje Musical
-- **Otras asignaturas**: Armonía, Historia de la Música, Instrumento Complementario, Análisis Musical, Fundamentos de Composición, Orquesta
-- **Evaluación**: Cualitativa (Inicial, En Desarrollo, Adquirido, Avanzado)
-- **Título**: Título Profesional de Música
-
-## Módulo de Exportación
-
-### Uso
-
-Una vez generada la rúbrica (en modo local), aparecerá un panel de exportación con tres botones:
-
-1. **Excel (XLSX)** - Genera un archivo `.xlsx` con todas las secciones de la rúbrica organizadas en hojas de cálculo
-2. **Word (DOCX)** - Genera un documento `.docx` formateado profesionalmente con tablas y estilos
-3. **PDF** - Genera un documento `.pdf` con paginación automática y tablas estilizadas
-
-### Características de la exportación
-
-- **Nombre de archivo**: `Rubrica_[Asignatura]_[Curso].[extensión]`
-- **Contenido completo**: Competencias, criterios, indicadores, niveles de logro e instrumentos de evaluación
-- **Formato profesional**: Tablas con bordes, colores y anchos optimizados
-- **Code-splitting**: Las librerías se cargan solo cuando se necesitan, optimizando el rendimiento
-
-### Ejemplo de uso programático
-
-```typescript
-import { exportToXLSX, exportToWord, exportToPDF } from './services/exportService';
-
-const data = { asignatura: asignaturaData, curso: '3º' };
-
-// Exportar a Excel
-await exportToXLSX(data);
-
-// Exportar a Word
-await exportToWord(data);
-
-// Exportar a PDF
-await exportToPDF(data);
-```
-
-## Correcciones Realizadas
-
-Se han corregido los siguientes errores en el ecosistema:
-
-1. **`src/App.tsx`:** Corregido el problema de búsqueda de asignatura (comparaba `id` con `nombre`)
-2. **`src/App.tsx`:** Eliminadas variables no usadas (`displayAsignatura`, `displayCurso`)
-3. **`src/components/RubricRenderer.tsx`:** Cambiado tipo de retorno de `JSX.Element` a `ReactNode` para compatibilidad con React 18
-4. **`tsconfig.json`:** Agregados tipos de Vite client (`"types": ["vite/client"]`)
-5. **`vercel.json`:** Corregida configuración de rewrites para evitar conflictos
-6. **`api/index.py`:** Corregidas rutas de la API (eliminada duplicación de prefijo `/api/`)
-
-## Licencia
-
-Proyecto educativo de código abierto.
-
-## Créditos
-
-- **Decreto 58/2022:** Junta de Extremadura
-- **Modelo IA:** Qwen 3.0 (Alibaba Cloud)
-- **Plataforma IA:** Nebius Token Factory
+**Desarrollado para las Enseñanzas Artísticas de Música de Extremadura**
