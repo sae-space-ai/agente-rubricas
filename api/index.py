@@ -19,9 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Cliente de Nebius Token Factory
+# Cliente de Nebius Token Factory (US Central)
 client = OpenAI(
-    base_url="https://api.tokenfactory.nebius.com/v1/",
+    base_url="https://api.tokenfactory.us-central1.nebius.com/v1/",
     api_key=os.environ.get("NEBIUS_API_KEY")
 )
 
@@ -120,7 +120,7 @@ class RubricResponse(BaseModel):
 async def generar_rubrica(request: RubricRequest):
     try:
         response = client.chat.completions.create(
-            model="google/gemma-3-27b-it",
+            model="dedicated/Qwen/Qwen2.5-VL-72B-Instruct-DBRGDp",
             max_tokens=4000,
             temperature=0.5,
             top_p=0.9,
@@ -146,7 +146,8 @@ async def health():
     return {
         "status": "ok",
         "service": "Arquitecto de Rúbricas Musicales API",
-        "model": "google/gemma-3-27b-it",
+        "model": "dedicated/Qwen/Qwen2.5-VL-72B-Instruct-DBRGDp",
+        "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
         "materias": ["Música de Cámara", "Banda", "Orquesta"],
         "criterios": ["CO-01", "CO-02", "CO-03", "CO-04", "CO-05", "CO-06", "CO-07", "CO-08", "CO-09", "CO-10", "CO-11", "CO-12"],
         "competencias": ["CM-1", "CM-2", "CM-3", "CM-4", "CM-5", "CM-6", "CM-7"],

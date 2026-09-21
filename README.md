@@ -9,7 +9,8 @@ Sistema inteligente de generación de rúbricas de evaluación para las Enseñan
 - **7 Competencias** (CM-1 a CM-7)
 - **4 Niveles de logro**: Inicial, En desarrollo, Adecuado, Consolidado
 - **Exportación múltiple**: Excel (XLSX), Word (DOCX) y PDF
-- **IA integrada**: Google Gemma 3 27B via Nebius Token Factory
+- **IA integrada**: Qwen 2.5 VL 72B (Vision Language) via Nebius Token Factory
+- **Endpoint regional**: US Central para menor latencia
 - **Validación automática**: Regla crítica para Música de Cámara (solo 4º, 5º, 6º)
 
 ## 📚 Marco Normativo
@@ -210,7 +211,8 @@ mi-agente-rubricas/
 - **FastAPI** para la API REST
 - **Python 3.9+**
 - **OpenAI SDK** para comunicación con Nebius
-- **Google Gemma 3 27B** como modelo de IA
+- **Qwen 2.5 VL 72B** como modelo de IA (Vision Language)
+- **Endpoint regional**: US Central (api.tokenfactory.us-central1.nebius.com)
 
 ### Despliegue
 - **Vercel** para hosting y serverless functions

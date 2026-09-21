@@ -202,10 +202,10 @@ export default function App() {
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <i className={`fas fa-robot text-lg ${modoGeneracion === 'api' ? 'text-purple-600' : 'text-gray-400'}`}></i>
-                        <span className="font-bold text-gray-800">IA con Gemma 3</span>
+                        <span className="font-bold text-gray-800">IA con Qwen 2.5 VL</span>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Generación dinámica con Google Gemma 3 27B
+                        Generación dinámica con Qwen 2.5 VL 72B
                       </p>
                     </button>
                   </div>
@@ -307,7 +307,7 @@ export default function App() {
                     ) : (
                       <>
                         <i className={`fas ${modoGeneracion === 'api' ? 'fa-robot' : 'fa-magic'}`}></i>
-                        {modoGeneracion === 'api' ? 'Generar con IA (Gemma 3)' : 'Generar Rúbrica'}
+                        {modoGeneracion === 'api' ? 'Generar con IA (Qwen 2.5 VL)' : 'Generar Rúbrica'}
                       </>
                     )}
                   </button>
@@ -368,7 +368,7 @@ export default function App() {
                 {modoGeneracion === 'api' && (
                   <span className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-purple-700 text-xs font-medium">
                     <i className="fas fa-robot"></i>
-                    Generado con Gemma 3
+                    Generado con Qwen 2.5 VL
                   </span>
                 )}
                 <button
@@ -583,7 +583,7 @@ export default function App() {
           </p>
           <p className="text-xs mt-1 text-gray-600">
             <i className="fas fa-robot mr-1 text-purple-400"></i>
-            Powered by Google Gemma 3 27B via Nebius Token Factory
+            Powered by Qwen 2.5 VL 72B via Nebius Token Factory
           </p>
         </div>
       </footer>
