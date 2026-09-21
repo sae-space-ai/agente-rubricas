@@ -1,4 +1,4 @@
-import { AsignaturaData, nivelesLogro, generarIndicadores } from '../data/curriculum';
+import { AsignaturaData, getNivelesLogro, generarIndicadores } from '../data/curriculum';
 
 export interface ExportData {
   asignatura: AsignaturaData;
@@ -12,14 +12,18 @@ export async function exportToXLSX(data: ExportData): Promise<void> {
   const XLSX = await import('xlsx');
   const { saveAs } = await import('file-saver');
   const { asignatura, curso } = data;
+  const nivelesLogro = getNivelesLogro(asignatura.nivel);
 
   // Crear datos para la hoja
   const worksheetData: any[][] = [];
 
   // Título
   worksheetData.push([`Rúbrica de Evaluación - ${asignatura.nombre}, ${curso}`]);
-  worksheetData.push(['Enseñanzas Profesionales de Música - Extremadura']);
-  worksheetData.push(['Decreto 58/2022']);
+  worksheetData.push([`Enseñanzas ${asignatura.nivel === 'elemental' ? 'Elementales' : 'Profesionales'} de Música - Extremadura`]);
+  worksheetData.push([asignatura.nivel === 'elemental'
+    ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
+    : 'Decreto 111/2007'
+  ]);
   worksheetData.push([]);
 
   // Competencias Específicas
@@ -99,6 +103,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
   const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } = await import('docx');
   const { saveAs } = await import('file-saver');
   const { asignatura, curso } = data;
+  const nivelesLogro = getNivelesLogro(asignatura.nivel);
 
   const children: any[] = [];
 
@@ -117,7 +122,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
     new Paragraph({
       children: [
         new TextRun({
-          text: 'Enseñanzas Profesionales de Música - Extremadura',
+          text: `Enseñanzas ${asignatura.nivel === 'elemental' ? 'Elementales' : 'Profesionales'} de Música - Extremadura`,
           size: 24,
         }),
       ],
@@ -126,7 +131,9 @@ export async function exportToWord(data: ExportData): Promise<void> {
     new Paragraph({
       children: [
         new TextRun({
-          text: 'Decreto 58/2022',
+          text: asignatura.nivel === 'elemental'
+            ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
+            : 'Decreto 111/2007',
           size: 20,
           italics: true,
         }),
@@ -299,6 +306,7 @@ export async function exportToPDF(data: ExportData): Promise<void> {
   const { default: jsPDF } = await import('jspdf');
   await import('jspdf-autotable');
   const { asignatura, curso } = data;
+  const nivelesLogro = getNivelesLogro(asignatura.nivel);
 
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -317,9 +325,11 @@ export async function exportToPDF(data: ExportData): Promise<void> {
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('Enseñanzas Profesionales de Música - Extremadura', margin, yPosition);
+  doc.text(`Enseñanzas ${asignatura.nivel === 'elemental' ? 'Elementales' : 'Profesionales'} de Música - Extremadura`, margin, yPosition);
   yPosition += 5;
-  doc.text('Decreto 58/2022', margin, yPosition);
+  doc.text(asignatura.nivel === 'elemental'
+    ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
+    : 'Decreto 111/2007', margin, yPosition);
   yPosition += 15;
 
   // Competencias Específicas

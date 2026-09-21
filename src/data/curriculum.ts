@@ -1,5 +1,9 @@
-// Datos del currículo de Enseñanzas Profesionales de Música en Extremadura
-// Basado en el Decreto 58/2022
+// Datos del currículo de Enseñanzas Artísticas de Música en Extremadura
+// Basado en:
+// - Decreto 110/2007 (modificado por Decreto 54/2022): Enseñanzas Elementales
+// - Decreto 111/2007: Enseñanzas Profesionales
+
+export type NivelEnsenanza = 'elemental' | 'profesional';
 
 export interface CompetenciaEspecifica {
   id: string;
@@ -24,22 +28,73 @@ export interface IndicadorLogro {
   descripcion: string;
 }
 
-export interface RubricaCriterio {
-  criterioId: string;
-  criterioDescripcion: string;
-  indicadores: IndicadorLogro[];
-}
-
 export interface AsignaturaData {
   id: string;
   nombre: string;
+  nivel: NivelEnsenanza;
   cursos: string[];
   competencias: CompetenciaEspecifica[];
   criterios: CriterioEvaluacion[];
   instrumentos: string[];
 }
 
-export const nivelesLogro: NivelLogro[] = [
+export interface DecretoInfo {
+  numero: string;
+  anio: number;
+  descripcion: string;
+  nivel: NivelEnsenanza;
+  modificadoPor?: string;
+}
+
+// Información de los Decretos Oficiales
+export const decretos: DecretoInfo[] = [
+  {
+    numero: '110/2007',
+    anio: 2007,
+    descripcion: 'Regula el currículo de las Enseñanzas Elementales de Música de régimen especial',
+    nivel: 'elemental',
+    modificadoPor: '54/2022'
+  },
+  {
+    numero: '54/2022',
+    anio: 2022,
+    descripcion: 'Modifica el Decreto 110/2007 adaptándolo a la LOMLOE e incorpora la especialidad de Órgano',
+    nivel: 'elemental'
+  },
+  {
+    numero: '111/2007',
+    anio: 2007,
+    descripcion: 'Establece el currículo de las Enseñanzas Profesionales de Música de régimen especial',
+    nivel: 'profesional'
+  }
+];
+
+// Niveles de logro para Enseñanzas Elementales (Apto/No Apto simplificado con 4 niveles)
+export const nivelesLogroElemental: NivelLogro[] = [
+  {
+    nombre: "No Apt",
+    color: "#ef4444",
+    descripcion: "El alumno no alcanza los objetivos mínimos establecidos. Requiere apoyo significativo."
+  },
+  {
+    nombre: "Apt con Deficiencias",
+    color: "#f59e0b",
+    descripcion: "El alumno alcanza los objetivos mínimos con dificultades. Necesita consolidar aspectos fundamentales."
+  },
+  {
+    nombre: "Apt",
+    color: "#3b82f6",
+    descripcion: "El alumno alcanza satisfactoriamente los objetivos previstos. Demuestra competencia adecuada."
+  },
+  {
+    nombre: "Apt con Excelencia",
+    color: "#10b981",
+    descripcion: "El alumno supera los objetivos previstos mostrando un dominio excelente y autonomía."
+  }
+];
+
+// Niveles de logro para Enseñanzas Profesionales
+export const nivelesLogroProfesional: NivelLogro[] = [
   {
     nombre: "Inicial",
     color: "#ef4444",
@@ -48,7 +103,7 @@ export const nivelesLogro: NivelLogro[] = [
   {
     nombre: "En Desarrollo",
     color: "#f59e0b",
-    descripcion: "El alumno avanza hacia los objetivos previstos pero necesita consolidar aspectos fundamentales. Requiere orientación frecuente."
+    descripcion: "El alumno avanza hacia los objetivos previstos pero necesita consolidar aspectos fundamentales."
   },
   {
     nombre: "Adquirido",
@@ -62,10 +117,128 @@ export const nivelesLogro: NivelLogro[] = [
   }
 ];
 
-export const asignaturas: AsignaturaData[] = [
+// Especialidades instrumentales (comunes a ambos niveles)
+export const especialidadesInstrumentales = [
+  'Acordeón', 'Arpa', 'Clarinete', 'Clave', 'Contrabajo', 'Fagot',
+  'Flauta travesera', 'Flauta de Pico', 'Guitarra', 'Instrumentos de Púa',
+  'Oboe', 'Órgano', 'Percusión', 'Piano', 'Saxofón', 'Trompa',
+  'Trompeta', 'Trombón', 'Tuba', 'Viola', 'Viola de Gamba',
+  'Violín', 'Violoncello'
+];
+
+// Asignaturas de Enseñanzas ELEMENTALES (Decreto 110/2007 modificado por 54/2022)
+export const asignaturasElementales: AsignaturaData[] = [
   {
-    id: "lenguaje-musical",
+    id: "elemental-lenguaje-musical",
     nombre: "Lenguaje Musical",
+    nivel: "elemental",
+    cursos: ["1º", "2º", "3º", "4º"],
+    competencias: [
+      {
+        id: "CE1",
+        descripcion: "Conocer y utilizar los elementos básicos del lenguaje musical como herramienta para la lectura, escritura e invención de música.",
+        descriptores: ["Lectura rítmica", "Lectura melódica", "Escritura musical", "Improvisación"]
+      },
+      {
+        id: "CE2",
+        descripcion: "Desarrollar la capacidad auditiva como medio de aprendizaje y conocimiento del lenguaje musical.",
+        descriptores: ["Discriminación auditiva", "Memoria auditiva", "Percepción tonal", "Percepción rítmica"]
+      },
+      {
+        id: "CE3",
+        descripcion: "Utilizar la voz como medio de expresión musical, desarrollando las capacidades auditivas y de afinación.",
+        descriptores: ["Canto afinado", "Repertorio vocal", "Expresión", "Respiración"]
+      }
+    ],
+    criterios: [
+      { id: "C1.1", competenciaId: "CE1", descripcion: "Leer e interpretar partituras con fluidez y precisión rítmica y melódica." },
+      { id: "C1.2", competenciaId: "CE1", descripcion: "Escribir fragmentos musicales dictados o inventados con corrección." },
+      { id: "C2.1", competenciaId: "CE2", descripcion: "Reconocer y reproducir patrones rítmicos y melódicos de memoria." },
+      { id: "C2.2", competenciaId: "CE2", descripcion: "Dictar fragmentos melódicos y rítmicos sencillos con precisión." },
+      { id: "C3.1", competenciaId: "CE3", descripcion: "Interpretar melodías con la voz manteniendo la afinación y el pulso." },
+      { id: "C3.2", competenciaId: "CE3", descripcion: "Cantar en grupo ajustando la propia voz a la del conjunto." }
+    ],
+    instrumentos: ["Observación directa", "Pruebas escritas", "Dictados", "Lectura a primera vista", "Ejercicios de canto"]
+  },
+  {
+    id: "elemental-instrumento",
+    nombre: "Instrumento",
+    nivel: "elemental",
+    cursos: ["1º", "2º", "3º", "4º"],
+    competencias: [
+      {
+        id: "CE1",
+        descripcion: "Adoptar una postura corporal adecuada que permita la interpretación del instrumento con facilidad y sin tensiones.",
+        descriptores: ["Postura", "Relajación", "Posición", "Respiración"]
+      },
+      {
+        id: "CE2",
+        descripcion: "Utilizar las técnicas básicas del instrumento para interpretar piezas de dificultad progresiva.",
+        descriptores: ["Emisión sonora", "Articulación", "Digitación", "Control dinámico"]
+      },
+      {
+        id: "CE3",
+        descripcion: "Interpretar obras de diferentes estilos y épocas adaptadas al nivel, mostrando sensibilidad auditiva y musical.",
+        descriptores: ["Repertorio variado", "Estilo", "Expresividad", "Lectura"]
+      },
+      {
+        id: "CE4",
+        descripcion: "Mostrar interés por la música como forma de expresión y comunicación, participando en audiciones y actividades del centro.",
+        descriptores: ["Motivación", "Participación", "Actitud", "Compromiso"]
+      }
+    ],
+    criterios: [
+      { id: "C1.1", competenciaId: "CE1", descripcion: "Mantener una postura corporal correcta que favorezca la producción sonora y previene lesiones." },
+      { id: "C1.2", competenciaId: "CE1", descripcion: "Demostrar relajación en la ejecución evitando tensiones innecesarias." },
+      { id: "C2.1", competenciaId: "CE2", descripcion: "Demostrar el dominio de las técnicas básicas del instrumento en la interpretación de obras." },
+      { id: "C2.2", competenciaId: "CE2", descripcion: "Controlar los aspectos básicos de la emisión sonora: afinación, calidad del sonido y dinámica." },
+      { id: "C3.1", competenciaId: "CE3", descripcion: "Interpretar obras de diferentes estilos con calidad sonora y coherencia expresiva." },
+      { id: "C3.2", competenciaId: "CE3", descripcion: "Leer e interpretar partituras con fluidez rítmica y comprensión musical." },
+      { id: "C4.1", competenciaId: "CE4", descripcion: "Participar en audiciones y actividades musicales del centro con responsabilidad." },
+      { id: "C4.2", competenciaId: "CE4", descripcion: "Mostrar hábitos de estudio regulares y autonomía en el trabajo." }
+    ],
+    instrumentos: ["Audiciones de aula", "Observación directa", "Grabaciones", "Rúbrica de interpretación", "Cuaderno de trabajo"]
+  },
+  {
+    id: "elemental-coro",
+    nombre: "Coro",
+    nivel: "elemental",
+    cursos: ["3º", "4º"],
+    competencias: [
+      {
+        id: "CE1",
+        descripcion: "Cantar en grupo manteniendo la afinación, el ritmo y la cohesión sonora del conjunto.",
+        descriptores: ["Afinación", "Ritmo", "Cohesión", "Equilibrio vocal"]
+      },
+      {
+        id: "CE2",
+        descripcion: "Interpretar repertorio vocal adecuado al nivel con propiedad estilística y expresividad.",
+        descriptores: ["Repertorio variado", "Dicción", "Expresividad", "Estilo"]
+      },
+      {
+        id: "CE3",
+        descripcion: "Desarrollar la escucha activa y la sensibilidad hacia las demás voces del conjunto.",
+        descriptores: ["Escucha activa", "Equilibrio", "Integración", "Sensibilidad"]
+      }
+    ],
+    criterios: [
+      { id: "C1.1", competenciaId: "CE1", descripcion: "Mantener la afinación individual dentro del conjunto vocal." },
+      { id: "C1.2", competenciaId: "CE1", descripcion: "Seguir el pulso y el ritmo con precisión en la interpretación coral." },
+      { id: "C2.1", competenciaId: "CE2", descripcion: "Interpretar obras de diferentes estilos con propiedad y expresividad." },
+      { id: "C2.2", competenciaId: "CE2", descripcion: "Aplicar una dicción correcta y comprensible en las obras interpretadas." },
+      { id: "C3.1", competenciaId: "CE3", descripcion: "Escuchar activamente al resto de voces ajustando la propia emisión." },
+      { id: "C3.2", competenciaId: "CE3", descripcion: "Integrarse en el conjunto manteniendo el equilibrio sonoro." }
+    ],
+    instrumentos: ["Observación directa en ensayos", "Audiciones", "Rúbrica de participación", "Autoevaluación"]
+  }
+];
+
+// Asignaturas de Enseñanzas PROFESIONALES (Decreto 111/2007)
+export const asignaturasProfesionales: AsignaturaData[] = [
+  {
+    id: "profesional-lenguaje-musical",
+    nombre: "Lenguaje Musical",
+    nivel: "profesional",
     cursos: ["1º", "2º", "3º", "4º"],
     competencias: [
       {
@@ -102,8 +275,9 @@ export const asignaturas: AsignaturaData[] = [
     instrumentos: ["Observación directa", "Pruebas escritas", "Dictados", "Ejercicios de lectura a primera vista", "Rúbrica de interpretación vocal"]
   },
   {
-    id: "instrumento",
+    id: "profesional-instrumento",
     nombre: "Instrumento Principal",
+    nivel: "profesional",
     cursos: ["1º", "2º", "3º", "4º", "5º", "6º"],
     competencias: [
       {
@@ -147,46 +321,9 @@ export const asignaturas: AsignaturaData[] = [
     instrumentos: ["Audiciones públicas", "Interpretación en clase", "Grabaciones", "Rúbrica de interpretación", "Autoevaluación del alumno"]
   },
   {
-    id: "coro",
-    nombre: "Coro",
-    cursos: ["1º", "2º", "3º", "4º", "5º", "6º"],
-    competencias: [
-      {
-        id: "CE1",
-        descripcion: "Cantar en grupo manteniendo la afinación, el ritmo y la cohesión sonora del conjunto.",
-        descriptores: ["Afinación", "Ritmo", "Cohesión grupal", "Equilibrio vocal"]
-      },
-      {
-        id: "CE2",
-        descripcion: "Interpretar repertorio vocal de diferentes estilos y épocas con propiedad estilística y expresividad.",
-        descriptores: ["Repertorio variado", "Estilo", "Expresividad", "Dicción"]
-      },
-      {
-        id: "CE3",
-        descripcion: "Desarrollar la escucha activa y la sensibilidad hacia las demás voces del ensemble vocal.",
-        descriptores: ["Escucha polifónica", "Equilibrio", "Integración", "Sensibilidad"]
-      },
-      {
-        id: "CE4",
-        descripcion: "Participar en la preparación y ejecución de audiciones y conciertos con responsabilidad y compromiso.",
-        descriptores: ["Compromiso", "Responsabilidad", "Preparación", "Actitud escénica"]
-      }
-    ],
-    criterios: [
-      { id: "C1.1", competenciaId: "CE1", descripcion: "Mantener la afinación individual dentro del conjunto vocal." },
-      { id: "C1.2", competenciaId: "CE1", descripcion: "Seguir el pulso y el ritmo con precisión en la interpretación coral." },
-      { id: "C2.1", competenciaId: "CE2", descripcion: "Interpretar obras de diferentes estilos con propiedad y expresividad." },
-      { id: "C2.2", competenciaId: "CE2", descripcion: "Aplicar una dicción correcta y comprensible en los diferentes idiomas del repertorio." },
-      { id: "C3.1", competenciaId: "CE3", descripcion: "Escuchar activamente al resto de voces ajustando la propia emisión." },
-      { id: "C3.2", competenciaId: "CE3", descripcion: "Integrarse en la sección y en el conjunto manteniendo el equilibrio sonoro." },
-      { id: "C4.1", competenciaId: "CE4", descripcion: "Participar con regularidad y puntualidad en los ensayos y actuaciones." },
-      { id: "C4.2", competenciaId: "CE4", descripcion: "Demostrar una actitud positiva y profesional en las actuaciones públicas." }
-    ],
-    instrumentos: ["Observación directa en ensayos", "Audiciones y conciertos", "Rúbrica de participación", "Autoevaluación grupal", "Evaluación entre pares"]
-  },
-  {
-    id: "musica-camara",
+    id: "profesional-musica-camara",
     nombre: "Música de Cámara",
+    nivel: "profesional",
     cursos: ["2º", "3º", "4º", "5º", "6º"],
     competencias: [
       {
@@ -223,8 +360,48 @@ export const asignaturas: AsignaturaData[] = [
     instrumentos: ["Audiciones públicas", "Observación de ensayos", "Rúbrica de trabajo en grupo", "Memoria de trabajo", "Videoanálisis"]
   },
   {
-    id: "harmonia",
+    id: "profesional-coro",
+    nombre: "Coro",
+    nivel: "profesional",
+    cursos: ["1º", "2º", "3º", "4º", "5º", "6º"],
+    competencias: [
+      {
+        id: "CE1",
+        descripcion: "Cantar en grupo manteniendo la afinación, el ritmo y la cohesión sonora del conjunto.",
+        descriptores: ["Afinación", "Ritmo", "Cohesión grupal", "Equilibrio vocal"]
+      },
+      {
+        id: "CE2",
+        descripcion: "Interpretar repertorio vocal de diferentes estilos y épocas con propiedad estilística y expresividad.",
+        descriptores: ["Repertorio variado", "Estilo", "Expresividad", "Dicción"]
+      },
+      {
+        id: "CE3",
+        descripcion: "Desarrollar la escucha activa y la sensibilidad hacia las demás voces del ensemble vocal.",
+        descriptores: ["Escucha polifónica", "Equilibrio", "Integración", "Sensibilidad"]
+      },
+      {
+        id: "CE4",
+        descripcion: "Participar en la preparación y ejecución de audiciones y conciertos con responsabilidad y compromiso.",
+        descriptores: ["Compromiso", "Responsabilidad", "Preparación", "Actitud escénica"]
+      }
+    ],
+    criterios: [
+      { id: "C1.1", competenciaId: "CE1", descripcion: "Mantener la afinación individual dentro del conjunto vocal." },
+      { id: "C1.2", competenciaId: "CE1", descripcion: "Seguir el pulso y el ritmo con precisión en la interpretación coral." },
+      { id: "C2.1", competenciaId: "CE2", descripcion: "Interpretar obras de diferentes estilos con propiedad y expresividad." },
+      { id: "C2.2", competenciaId: "CE2", descripcion: "Aplicar una dicción correcta y comprensible en los diferentes idiomas del repertorio." },
+      { id: "C3.1", competenciaId: "CE3", descripcion: "Escuchar activamente al resto de voces ajustando la propia emisión." },
+      { id: "C3.2", competenciaId: "CE3", descripcion: "Integrarse en la sección y en el conjunto manteniendo el equilibrio sonoro." },
+      { id: "C4.1", competenciaId: "CE4", descripcion: "Participar con regularidad y puntualidad en los ensayos y actuaciones." },
+      { id: "C4.2", competenciaId: "CE4", descripcion: "Demostrar una actitud positiva y profesional en las actuaciones públicas." }
+    ],
+    instrumentos: ["Observación directa en ensayos", "Audiciones y conciertos", "Rúbrica de participación", "Autoevaluación grupal", "Evaluación entre pares"]
+  },
+  {
+    id: "profesional-harmonia",
     nombre: "Armonía",
+    nivel: "profesional",
     cursos: ["1º", "2º", "3º", "4º"],
     competencias: [
       {
@@ -261,8 +438,9 @@ export const asignaturas: AsignaturaData[] = [
     instrumentos: ["Ejercicios escritos", "Realización al piano", "Análisis de partituras", "Pruebas teóricas", "Dictados armónicos"]
   },
   {
-    id: "historia-musica",
+    id: "profesional-historia-musica",
     nombre: "Historia de la Música",
+    nivel: "profesional",
     cursos: ["1º", "2º"],
     competencias: [
       {
@@ -299,13 +477,14 @@ export const asignaturas: AsignaturaData[] = [
     instrumentos: ["Trabajos de investigación", "Exámenes escritos y orales", "Audiciones comentadas", "Líneas del tiempo", "Ensayos críticos"]
   },
   {
-    id: "coro-instrumento-complementario",
-    nombre: "Coro / Instrumento Complementario",
+    id: "profesional-instrumento-complementario",
+    nombre: "Instrumento Complementario",
+    nivel: "profesional",
     cursos: ["1º", "2º", "3º", "4º"],
     competencias: [
       {
         id: "CE1",
-        descripcion: "Desarrollar competencias básicas en un segundo instrumento o en el canto coral complementario.",
+        descripcion: "Desarrollar competencias básicas en un segundo instrumento complementario a la especialidad principal.",
         descriptores: ["Técnica básica", "Lectura", "Interpretación", "Progresión"]
       },
       {
@@ -320,9 +499,9 @@ export const asignaturas: AsignaturaData[] = [
       }
     ],
     criterios: [
-      { id: "C1.1", competenciaId: "CE1", descripcion: "Demostrar el dominio de los aspectos técnicos básicos del instrumento o canto complementario." },
+      { id: "C1.1", competenciaId: "CE1", descripcion: "Demostrar el dominio de los aspectos técnicos básicos del instrumento complementario." },
       { id: "C1.2", competenciaId: "CE1", descripcion: "Mostrar una progresión constante en el aprendizaje del instrumento complementario." },
-      { id: "C2.1", competenciaId: "CE2", descripcion: "Aplicar los conocimientos musicales previos al nuevo instrumento o especialidad." },
+      { id: "C2.1", competenciaId: "CE2", descripcion: "Aplicar los conocimientos musicales previos al nuevo instrumento." },
       { id: "C2.2", competenciaId: "CE2", descripcion: "Mostrar una actitud abierta y positiva ante el aprendizaje de una nueva especialidad." },
       { id: "C3.1", competenciaId: "CE3", descripcion: "Interpretar obras del repertorio complementario con musicalidad y corrección." },
       { id: "C3.2", competenciaId: "CE3", descripcion: "Comprender las particularidades técnicas y expresivas del nuevo medio sonoro." }
@@ -331,135 +510,42 @@ export const asignaturas: AsignaturaData[] = [
   }
 ];
 
+// Combinar todas las asignaturas
+export const asignaturas: AsignaturaData[] = [
+  ...asignaturasElementales,
+  ...asignaturasProfesionales
+];
+
+// Función para obtener niveles de logro según el nivel de enseñanza
+export function getNivelesLogro(nivel: NivelEnsenanza): NivelLogro[] {
+  return nivel === 'elemental' ? nivelesLogroElemental : nivelesLogroProfesional;
+}
+
+// Función para obtener asignaturas por nivel
+export function getAsignaturasByNivel(nivel: NivelEnsenanza): AsignaturaData[] {
+  return nivel === 'elemental' ? asignaturasElementales : asignaturasProfesionales;
+}
+
 // Función para generar indicadores de logro según criterio y nivel
 export function generarIndicadores(asignaturaId: string, criterioId: string, nivel: string): string {
-  const indicadores: Record<string, Record<string, Record<string, string>>> = {
-    "lenguaje-musical": {
-      "C1.1": {
-        "Inicial": "No logra identificar las figuras rítmicas básicas ni las notas en las claves trabajadas. Muestra dificultades para mantener el pulso.",
-        "En Desarrollo": "Identifica parcialmente las figuras rítmicas y notas. Mantiene el pulso con dificultad y comete errores frecuentes en la lectura.",
-        "Adquirido": "Lee e interpreta partituras con fluidez aceptable, identificando correctamente figuras rítmicas y notas en las claves trabajadas.",
-        "Avanzado": "Lee con fluidez y expresividad, realizando matices dinámicos y de tempo. Interpreta con seguridad y comprensión musical plena."
-      },
-      "C1.2": {
-        "Inicial": "No identifica intervalos ni escalas de forma auditiva. Presenta dificultades significativas en la escritura musical.",
-        "En Desarrollo": "Identifica algunos intervalos y escalas con ayuda. Comete errores en la escritura de intervalos y escalas.",
-        "Adquirido": "Identifica y reproduce intervalos, escalas y acordes con corrección en la lectura y escritura musical.",
-        "Avanzado": "Reconoce e identifica con rapidez intervalos, escalas y acordes complejos. Demuestra dominio en la escritura musical."
-      },
-      "C2.1": {
-        "Inicial": "No logra reproducir patrones rítmicos ni melódicos simples de memoria.",
-        "En Desarrollo": "Reproduce patrones simples con ayuda y comete errores en patrones de mayor complejidad.",
-        "Adquirido": "Reconoce y reproduce de memoria patrones rítmicos y melódicos con precisión.",
-        "Avanzado": "Memoriza y reproduce patrones complejos con facilidad. Demuestra excelente memoria auditiva musical."
-      },
-      "C2.2": {
-        "Inicial": "No logra dictar fragmentos melódicos ni rítmicos simples.",
-        "En Desarrollo": "Dicta fragmentos simples con errores frecuentes. Necesita varias audiciones para completar la tarea.",
-        "Adquirido": "Dicta fragmentos melódicos y rítmicos con precisión adecuada al nivel.",
-        "Avanzado": "Dicta con precisión fragmentos de complejidad superior. Demuestra excelente oído y rapidez en la transcripción."
-      },
-      "C3.1": {
-        "Inicial": "No identifica los elementos formales básicos de una obra musical.",
-        "En Desarrollo": "Identifica algunos elementos formales con ayuda. Su análisis es superficial e incompleto.",
-        "Adquirido": "Analiza obras identificando correctamente sus elementos formales y estructurales.",
-        "Avanzado": "Realiza análisis profundos y argumentados. Establece relaciones entre los elementos y el discurso musical global."
-      },
-      "C3.2": {
-        "Inicial": "No reconoce auditivamente las texturas ni las formas musicales básicas.",
-        "En Desarrollo": "Reconoce algunas texturas y formas con ayuda. Confunde elementos auditivos con frecuencia.",
-        "Adquirido": "Reconoce auditivamente texturas y formas musicales con corrección.",
-        "Avanzado": "Identifica con rapidez y precisión texturas y formas complejas. Argumenta sus respuestas con vocabulario técnico."
-      },
-      "C4.1": {
-        "Inicial": "No mantiene la afinación ni el pulso al cantar. Muestra dificultades vocales significativas.",
-        "En Desarrollo": "Canta con afinación inestable y pulso irregular. Necesita apoyo constante para mantener la línea melódica.",
-        "Adquirido": "Interpreta melodías con afinación correcta y mantiene el pulso de forma regular.",
-        "Avanzado": "Canta con afinación precisa, expresividad y musicalidad. Realiza matices dinámicos y de fraseo con naturalidad."
-      },
-      "C4.2": {
-        "Inicial": "No logra coordinar los movimientos rítmicos corporales. Muestra descoordinación entre voz y cuerpo.",
-        "En Desarrollo": "Realiza ejercicios rítmicos corporales con imprecisión. La coordinación es limitada.",
-        "Adquirido": "Realiza ejercicios rítmicos corporales con coordinación y precisión adecuadas.",
-        "Avanzado": "Ejecuta patrones rítmicos corporales complejos con naturalidad y expresividad. Demuestra excelente coordinación."
-      }
+  // Indicadores genéricos para todos los criterios
+  const indicadoresGenericos: Record<string, Record<string, string>> = {
+    "elemental": {
+      "No Apt": "No alcanza los objetivos mínimos establecidos en el criterio. Presenta dificultades significativas que impiden la progresión.",
+      "Apt con Deficiencias": "Alcanza los objetivos mínimos con dificultades evidentes. Necesita consolidar aspectos fundamentales del criterio.",
+      "Apt": "Alcanza satisfactoriamente los objetivos del criterio. Demuestra competencia adecuada y autonomía en la mayoría de las tareas.",
+      "Apt con Excelencia": "Supera los objetivos del criterio mostrando un dominio excelente. Demuestra autonomía, creatividad y capacidad de transferencia."
     },
-    "instrumento": {
-      "C1.1": {
-        "Inicial": "La interpretación presenta problemas graves de afinación, ritmo y calidad sonora. No se percibe intención expresiva.",
-        "En Desarrollo": "Interpreta con calidad sonora mejorable. La afinación y el ritmo presentan irregularidades. Expresividad limitada.",
-        "Adquirido": "Interpreta con calidad sonora, afinación y ritmo adecuados. Muestra coherencia expresiva en la obra.",
-        "Avanzado": "Interpreta con excelencia técnica y expresiva. Demuestra madurez musical y dominio del estilo de la obra."
-      },
-      "C1.2": {
-        "Inicial": "No aplica criterios estilísticos diferenciados. Interpreta todas las obras con el mismo enfoque.",
-        "En Desarrollo": "Aplica algunos criterios estilísticos de forma inconsistente. La diferenciación entre estilos es limitada.",
-        "Adquirido": "Aplica criterios estilísticos adecuados a cada época y compositor.",
-        "Avanzado": "Demuestra un conocimiento profundo de los estilos y los aplica con naturalidad y personalidad interpretativa."
-      },
-      "C2.1": {
-        "Inicial": "El dominio técnico es insuficiente para resolver las obras propuestas. Presenta tensiones y bloqueos.",
-        "En Desarrollo": "Resuelve parcialmente las dificultades técnicas. Algunos pasajes presentan inseguridad técnica.",
-        "Adquirido": "Demuestra un dominio técnico adecuado que permite resolver las obras con solvencia.",
-        "Avanzado": "Domina con facilidad los recursos técnicos requeridos. Aborda pasajes complejos con naturalidad y seguridad."
-      },
-      "C2.2": {
-        "Inicial": "La postura y posición corporal son incorrectas y generan problemas en la producción sonora.",
-        "En Desarrollo": "Mantiene una postura aceptable pero con tensiones ocasionales que afectan la producción sonora.",
-        "Adquirido": "Mantiene una postura correcta que favorece la producción sonora y previene lesiones.",
-        "Avanzado": "Demuestra una postura natural y relajada. Utiliza el cuerpo de forma eficiente y expresiva."
-      },
-      "C3.1": {
-        "Inicial": "No logra leer a primera vista con fluidez. Se detiene constantemente y pierde el pulso.",
-        "En Desarrollo": "Lee con dificultades y detenciones frecuentes. El pulso es irregular y comete errores significativos.",
-        "Adquirido": "Lee a primera vista con fluidez aceptable, manteniendo el pulso y cometiendo errores mínimos.",
-        "Avanzado": "Lee a primera vista con fluidez y musicalidad. Mantiene el pulso constante y realiza matices expresivos."
-      },
-      "C3.2": {
-        "Inicial": "Interpreta sin comprender el discurso musical. La lectura es mecánica y sin intención.",
-        "En Desarrollo": "Comprende parcialmente el discurso musical. La interpretación muestra momentos de musicalidad intercalados.",
-        "Adquirido": "Interpreta con comprensión del discurso musical y sus intenciones expresivas.",
-        "Avanzado": "Comprende profundamente la obra y la transmite con convicción y personalidad artística."
-      },
-      "C4.1": {
-        "Inicial": "No logra interpretar de memoria. Muestra inseguridad total y se detiene frecuentemente.",
-        "En Desarrollo": "Interpreta de memoria con inseguridad. Se detiene en momentos de laguna memorística.",
-        "Adquirido": "Interpreta de memoria con seguridad y continuidad. Muestra confianza en la ejecución.",
-        "Avanzado": "Interpreta de memoria con total seguridad y libertad. Disfruta de la obra y la comunica plenamente."
-      },
-      "C4.2": {
-        "Inicial": "Muestra nerviosismo excesivo que impide una comunicación efectiva con el público.",
-        "En Desarrollo": "La comunicación con el público es limitada. Los nervios afectan parcialmente la interpretación.",
-        "Adquirido": "Se comunica con el público de forma natural y transmite la intención musical.",
-        "Avanzado": "Conecta con el público de forma excepcional. Demuestra carisma escénico y madurez artística."
-      },
-      "C5.1": {
-        "Inicial": "No se integra en la agrupación. No escucha a los compañeros y desequilibra el conjunto.",
-        "En Desarrollo": "Se integra parcialmente pero no ajusta su volumen ni se adapta al grupo con regularidad.",
-        "Adquirido": "Participa activamente manteniendo el equilibrio sonoro y la cohesión del grupo.",
-        "Avanzado": "Es un miembro activo y generador del grupo. Contribuye positivamente al equilibrio y la cohesión."
-      },
-      "C5.2": {
-        "Inicial": "No sigue las indicaciones del director ni se adapta al grupo.",
-        "En Desarrollo": "Sigue las indicaciones con retraso o de forma parcial. La adaptación al grupo es limitada.",
-        "Adquirido": "Sigue correctamente las indicaciones del director y se adapta al grupo con prontitud.",
-        "Avanzado": "Anticipa las indicaciones y responde con sensibilidad. Contribuye a la cohesión del grupo."
-      }
+    "profesional": {
+      "Inicial": "No alcanza los objetivos mínimos del criterio. Muestra dificultades significativas y requiere apoyo constante del profesor.",
+      "En Desarrollo": "Avanza hacia los objetivos pero presenta lagunas importantes. Necesita orientación frecuente para progresar.",
+      "Adquirido": "Alcanza satisfactoriamente los objetivos del criterio. Demuestra competencia adecuada y autonomía en la mayoría de las tareas.",
+      "Avanzado": "Supera los objetivos mostrando un dominio excelente. Demuestra autonomía, creatividad y capacidad de transferir los aprendizajes."
     }
   };
 
-  // Indicadores genéricos para asignaturas no detalladas
-  const indicadoresGenericos: Record<string, string> = {
-    "Inicial": "No alcanza los objetivos mínimos del criterio. Muestra dificultades significativas y requiere apoyo constante del profesor.",
-    "En Desarrollo": "Avanza hacia los objetivos pero presenta lagunas importantes. Necesita orientación frecuente para progresar.",
-    "Adquirido": "Alcanza satisfactoriamente los objetivos del criterio. Demuestra competencia adecuada y autonomía en la mayoría de las tareas.",
-    "Avanzado": "Supera los objetivos mostrando un dominio excelente. Demuestra autonomía, creatividad y capacidad de transferir los aprendizajes."
-  };
+  // Determinar el nivel de enseñanza por el ID de la asignatura
+  const nivelEnsenanza = asignaturaId.startsWith('elemental') ? 'elemental' : 'profesional';
 
-  // Intentar encontrar indicador específico
-  if (indicadores[asignaturaId]?.[criterioId]?.[nivel]) {
-    return indicadores[asignaturaId][criterioId][nivel];
-  }
-
-  return indicadoresGenericos[nivel] || "";
+  return indicadoresGenericos[nivelEnsenanza]?.[nivel] || "";
 }

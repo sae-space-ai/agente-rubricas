@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react';
 import {
   asignaturas,
-  nivelesLogro,
+  decretos,
+  getNivelesLogro,
+  getAsignaturasByNivel,
   generarIndicadores,
   type AsignaturaData,
-  type CriterioEvaluacion
+  type CriterioEvaluacion,
+  type NivelEnsenanza
 } from './data/curriculum';
 import { generarRubrica, type RubricResponse } from './services/api';
 import RubricRenderer from './components/RubricRenderer';
@@ -13,6 +16,7 @@ import ExportButtons from './components/ExportButtons';
 type ModoGeneracion = 'local' | 'api';
 
 export default function App() {
+  const [nivelEnsenanza, setNivelEnsenanza] = useState<NivelEnsenanza>('profesional');
   const [selectedAsignatura, setSelectedAsignatura] = useState<string>('');
   const [selectedCurso, setSelectedCurso] = useState<string>('');
   const [rubricGenerated, setRubricGenerated] = useState<boolean>(false);
@@ -25,10 +29,18 @@ export default function App() {
   const [customCurso, setCustomCurso] = useState<string>('');
   const rubricRef = useRef<HTMLDivElement>(null);
 
-  // Buscar asignatura por nombre (ya que el select usa el nombre como valor)
-  const currentAsignatura: AsignaturaData | undefined = asignaturas.find(
+  const asignaturasNivel = getAsignaturasByNivel(nivelEnsenanza);
+  const nivelesLogro = getNivelesLogro(nivelEnsenanza);
+
+  const currentAsignatura: AsignaturaData | undefined = asignaturasNivel.find(
     (a) => a.nombre === selectedAsignatura
   );
+
+  const handleNivelChange = (nivel: NivelEnsenanza) => {
+    setNivelEnsenanza(nivel);
+    setSelectedAsignatura('');
+    setSelectedCurso('');
+  };
 
   const handleGenerate = async () => {
     if (modoGeneracion === 'local') {
@@ -36,7 +48,6 @@ export default function App() {
         setRubricGenerated(true);
       }
     } else {
-      // Modo API - usar Qwen
       const asignaturaNombre = customAsignatura || selectedAsignatura;
       const cursoNombre = customCurso || selectedCurso;
 
@@ -90,6 +101,10 @@ export default function App() {
     ? !!(selectedAsignatura && selectedCurso)
     : !!(customAsignatura && customCurso);
 
+  const decretoRef = nivelEnsenanza === 'elemental'
+    ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
+    : 'Decreto 111/2007';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
@@ -105,7 +120,7 @@ export default function App() {
                   Arquitecto de Rúbricas Musicales
                 </h1>
                 <p className="text-indigo-200 text-sm sm:text-base mt-1">
-                  Enseñanzas Profesionales de Música — Extremadura
+                  Enseñanzas Artísticas de Música — Extremadura
                 </p>
               </div>
             </div>
@@ -113,27 +128,46 @@ export default function App() {
               onClick={() => setShowInfo(!showInfo)}
               className="hidden sm:flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all"
             >
-              <i className="fas fa-info-circle"></i>
-              <span className="text-sm">Decreto 58/2022</span>
+              <i className="fas fa-gavel"></i>
+              <span className="text-sm">Decretos</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Info Panel */}
+      {/* Info Panel - Decretos */}
       {showInfo && (
         <div className="bg-indigo-50 border-b border-indigo-200 print:hidden">
           <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
             <div className="bg-white rounded-lg p-4 shadow-sm border border-indigo-100">
-              <h3 className="font-semibold text-indigo-900 mb-2">
-                <i className="fas fa-gavel mr-2"></i>Marco Normativo
+              <h3 className="font-semibold text-indigo-900 mb-3">
+                <i className="fas fa-gavel mr-2"></i>Marco Normativo Oficial
               </h3>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                Esta herramienta genera rúbricas de evaluación basadas en el{' '}
-                <strong>Decreto 58/2022</strong> de la Junta de Extremadura. Utiliza el modelo{' '}
-                <strong>Qwen 3.0</strong> a través de Nebius Token Factory para generar rúbricas
-                personalizadas basadas en el currículo oficial de las enseñanzas artísticas
-                profesionales de Música.
+              <div className="space-y-3">
+                {decretos.map((decreto, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`px-2 py-1 rounded text-xs font-bold text-white ${
+                      decreto.nivel === 'elemental' ? 'bg-blue-500' : 'bg-purple-500'
+                    }`}>
+                      {decreto.nivel === 'elemental' ? 'EE' : 'EP'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800 text-sm">
+                        Decreto {decreto.numero}/{decreto.anio}
+                      </p>
+                      <p className="text-gray-600 text-xs">{decreto.descripcion}</p>
+                      {decreto.modificadoPor && (
+                        <p className="text-indigo-600 text-xs mt-1">
+                          <i className="fas fa-edit mr-1"></i>
+                          Modificado por Decreto {decreto.modificadoPor}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                EE = Enseñanzas Elementales | EP = Enseñanzas Profesionales
               </p>
             </div>
           </div>
@@ -151,11 +185,53 @@ export default function App() {
                   Configuración de la Rúbrica
                 </h2>
                 <p className="text-indigo-100 text-sm mt-1">
-                  Seleccione el modo de generación, asignatura y curso
+                  Seleccione nivel, modo de generación, asignatura y curso
                 </p>
               </div>
 
               <div className="p-6 space-y-6">
+                {/* Nivel de Enseñanza */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    <i className="fas fa-graduation-cap mr-2 text-indigo-600"></i>
+                    Nivel de Enseñanza
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handleNivelChange('elemental')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        nivelEnsenanza === 'elemental'
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 bg-gray-50 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">EE</span>
+                        <span className="font-bold text-gray-800">Enseñanzas Elementales</span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Decreto 110/2007 (mod. por 54/2022) — 4 cursos
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => handleNivelChange('profesional')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        nivelEnsenanza === 'profesional'
+                          ? 'border-purple-500 bg-purple-50 shadow-md'
+                          : 'border-gray-200 bg-gray-50 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="bg-purple-500 text-white px-2 py-1 rounded text-xs font-bold">EP</span>
+                        <span className="font-bold text-gray-800">Enseñanzas Profesionales</span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Decreto 111/2007 — 6 cursos
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Mode Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -176,7 +252,7 @@ export default function App() {
                         <span className="font-bold text-gray-800">Datos Locales</span>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Rúbricas predefinidas basadas en el currículo oficial. Rápidas y sin conexión.
+                        Rúbricas predefinidas del currículo oficial. Rápidas y sin conexión.
                       </p>
                     </button>
                     <button
@@ -192,7 +268,7 @@ export default function App() {
                         <span className="font-bold text-gray-800">IA con Qwen 3.0</span>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Generación dinámica con inteligencia artificial. Personalizable y detallada.
+                        Generación dinámica con IA. Personalizable y detallada.
                       </p>
                     </button>
                   </div>
@@ -213,7 +289,7 @@ export default function App() {
                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all bg-gray-50 hover:bg-white"
                   >
                     <option value="">— Seleccione una asignatura —</option>
-                    {asignaturas.map((asig) => (
+                    {asignaturasNivel.map((asig) => (
                       <option key={asig.id} value={asig.nombre}>
                         {asig.nombre}
                       </option>
@@ -239,7 +315,7 @@ export default function App() {
                 {/* Curso Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <i className="fas fa-graduation-cap mr-2 text-indigo-600"></i>
+                    <i className="fas fa-calendar-alt mr-2 text-indigo-600"></i>
                     Curso
                   </label>
                   {modoGeneracion === 'local' && currentAsignatura ? (
@@ -264,29 +340,9 @@ export default function App() {
                         type="text"
                         value={customCurso}
                         onChange={(e) => setCustomCurso(e.target.value)}
-                        placeholder="Ej: 1º, 2º, 3º, 4º, 5º, 6º..."
+                        placeholder={nivelEnsenanza === 'elemental' ? "Ej: 1º, 2º, 3º, 4º" : "Ej: 1º, 2º, 3º, 4º, 5º, 6º"}
                         className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-gray-50 text-sm"
                       />
-                      {selectedAsignatura && (
-                        <div className="mt-3">
-                          <p className="text-xs text-gray-500 mb-2">O seleccione un curso estándar:</p>
-                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                            {['1º', '2º', '3º', '4º', '5º', '6º'].map((curso) => (
-                              <button
-                                key={curso}
-                                onClick={() => setCustomCurso(curso)}
-                                className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                                  customCurso === curso
-                                    ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-md'
-                                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300'
-                                }`}
-                              >
-                                {curso}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <p className="text-gray-500 text-sm italic">Seleccione primero una asignatura</p>
@@ -345,29 +401,32 @@ export default function App() {
                   <h3 className="font-semibold text-gray-800 text-sm">4 Niveles</h3>
                 </div>
                 <p className="text-gray-500 text-xs">
-                  Inicial, En Desarrollo, Adquirido y Avanzado
+                  {nivelEnsenanza === 'elemental'
+                    ? 'No Apt, Apt con Deficiencias, Apt, Apt con Excelencia'
+                    : 'Inicial, En Desarrollo, Adquirido, Avanzado'
+                  }
                 </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-green-100 p-2 rounded-lg">
-                    <i className="fas fa-bullseye text-green-600"></i>
+                    <i className="fas fa-file-export text-green-600"></i>
                   </div>
-                  <h3 className="font-semibold text-gray-800 text-sm">Indicadores</h3>
+                  <h3 className="font-semibold text-gray-800 text-sm">Exportar</h3>
                 </div>
                 <p className="text-gray-500 text-xs">
-                  Descripciones observables para cada nivel de logro
+                  Excel (XLSX), Word (DOCX) y PDF
                 </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-purple-100 p-2 rounded-lg">
-                    <i className="fas fa-brain text-purple-600"></i>
+                    <i className="fas fa-gavel text-purple-600"></i>
                   </div>
-                  <h3 className="font-semibold text-gray-800 text-sm">IA Qwen 3.0</h3>
+                  <h3 className="font-semibold text-gray-800 text-sm">Normativa</h3>
                 </div>
                 <p className="text-gray-500 text-xs">
-                  Generación inteligente vía Nebius Token Factory
+                  Decretos 110/2007, 111/2007, 54/2022
                 </p>
               </div>
             </div>
@@ -429,10 +488,10 @@ export default function App() {
                     Rúbrica de Evaluación — {currentAsignatura?.nombre}, {selectedCurso}
                   </h2>
                   <p className="text-indigo-200 text-sm mt-1">
-                    Enseñanzas Profesionales de Música — Comunidad Autónoma de Extremadura
+                    Enseñanzas {nivelEnsenanza === 'elemental' ? 'Elementales' : 'Profesionales'} de Música — Extremadura
                   </p>
                   <p className="text-indigo-300 text-xs mt-1">
-                    Decreto 58/2022 — Datos del currículo oficial
+                    {decretoRef}
                   </p>
                 </div>
 
@@ -590,7 +649,7 @@ export default function App() {
                 {/* Footer Note */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                   <p className="text-xs text-gray-500 text-center">
-                    Documento generado conforme al Decreto 58/2022 de la Junta de Extremadura.
+                    Documento generado conforme al {decretoRef}.
                     <br />
                     Las rúbricas son orientativas y deben adaptarse al contexto específico del aula y del alumnado.
                   </p>
@@ -606,10 +665,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-sm">
             <i className="fas fa-music mr-2 text-indigo-400"></i>
-            Arquitecto de Rúbricas Musicales — Enseñanzas Profesionales de Música
+            Arquitecto de Rúbricas Musicales — Enseñanzas Artísticas de Música
           </p>
           <p className="text-xs mt-2 text-gray-500">
-            Basado en el Decreto 58/2022 — Comunidad Autónoma de Extremadura
+            Decretos 110/2007, 111/2007 y 54/2022 — Comunidad Autónoma de Extremadura
           </p>
           <p className="text-xs mt-1 text-gray-600">
             <i className="fas fa-robot mr-1 text-purple-400"></i>

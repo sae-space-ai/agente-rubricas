@@ -163,7 +163,29 @@ uvicorn api.index:app --reload
 
 ## Marco Normativo
 
-Basado en el **Decreto 58/2022** de la Junta de Extremadura, por el que se establece el currículo de las enseñanzas artísticas profesionales de Música.
+La herramienta se basa en los siguientes decretos oficiales de la Comunidad Autónoma de Extremadura:
+
+### Decreto 110/2007, de 22 de mayo
+Regula el currículo de las **Enseñanzas Elementales de Música** de régimen especial. Establece:
+- **Duración**: 4 cursos académicos
+- **Asignaturas**: Lenguaje Musical, Instrumento, y Coro (en 3º y 4º)
+- **Especialidades instrumentales**: 23 especialidades incluyendo Piano, Guitarra, Violín, Voz, etc.
+- **Evaluación**: "Apto" / "No Apto"
+- **Certificación**: Certificado de Enseñanzas Elementales
+
+### Decreto 54/2022, de 18 de mayo
+Modifica el Decreto 110/2007 adaptándolo a la **LOMLOE** (Ley Orgánica 3/2020). Principales cambios:
+- Incorporación de la especialidad de **Órgano**
+- Adaptación de las competencias al nuevo marco educativo
+- Actualización de los criterios de evaluación
+
+### Decreto 111/2007, de 22 de mayo
+Establece el currículo de las **Enseñanzas Profesionales de Música** de régimen especial. Define:
+- **Duración**: 6 cursos académicos
+- **Asignaturas comunes**: Instrumento principal, Música de Cámara, Coro, Lenguaje Musical
+- **Otras asignaturas**: Armonía, Historia de la Música, Instrumento Complementario, Análisis Musical, Fundamentos de Composición, Orquesta
+- **Evaluación**: Cualitativa (Inicial, En Desarrollo, Adquirido, Avanzado)
+- **Título**: Título Profesional de Música
 
 ## Módulo de Exportación
 
