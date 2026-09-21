@@ -6,21 +6,62 @@ import {
   type AsignaturaData,
   type CriterioEvaluacion
 } from './data/curriculum';
+import { generarRubrica, type RubricResponse } from './services/api';
+import RubricRenderer from './components/RubricRenderer';
+
+type ModoGeneracion = 'local' | 'api';
 
 export default function App() {
   const [selectedAsignatura, setSelectedAsignatura] = useState<string>('');
   const [selectedCurso, setSelectedCurso] = useState<string>('');
   const [rubricGenerated, setRubricGenerated] = useState<boolean>(false);
   const [showInfo, setShowInfo] = useState<boolean>(false);
+  const [modoGeneracion, setModoGeneracion] = useState<ModoGeneracion>('local');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [apiRubric, setApiRubric] = useState<RubricResponse | null>(null);
+  const [customAsignatura, setCustomAsignatura] = useState<string>('');
+  const [customCurso, setCustomCurso] = useState<string>('');
   const rubricRef = useRef<HTMLDivElement>(null);
 
   const currentAsignatura: AsignaturaData | undefined = asignaturas.find(
     (a) => a.id === selectedAsignatura
   );
 
-  const handleGenerate = () => {
-    if (selectedAsignatura && selectedCurso) {
-      setRubricGenerated(true);
+  const handleGenerate = async () => {
+    if (modoGeneracion === 'local') {
+      if (selectedAsignatura && selectedCurso) {
+        setRubricGenerated(true);
+      }
+    } else {
+      // Modo API - usar Qwen
+      const asignatura = customAsignatura || selectedAsignatura;
+      const curso = customCurso || selectedCurso;
+
+      if (!asignatura || !curso) {
+        setError('Por favor, indique la asignatura y el curso.');
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+
+      try {
+        const response = await generarRubrica({
+          asignatura: asignatura,
+          curso: curso
+        });
+        setApiRubric(response);
+        setRubricGenerated(true);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Error al generar la rúbrica. Inténtelo de nuevo.');
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -28,6 +69,10 @@ export default function App() {
     setRubricGenerated(false);
     setSelectedAsignatura('');
     setSelectedCurso('');
+    setApiRubric(null);
+    setError('');
+    setCustomAsignatura('');
+    setCustomCurso('');
   };
 
   const handlePrint = () => {
@@ -38,6 +83,13 @@ export default function App() {
     if (!currentAsignatura) return [];
     return currentAsignatura.criterios.filter((c) => c.competenciaId === competenciaId);
   };
+
+  const displayAsignatura = modoGeneracion === 'api'
+    ? (customAsignatura || selectedAsignatura)
+    : selectedAsignatura;
+  const displayCurso = modoGeneracion === 'api'
+    ? (customCurso || selectedCurso)
+    : selectedCurso;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -79,10 +131,10 @@ export default function App() {
               </h3>
               <p className="text-gray-700 text-sm leading-relaxed">
                 Esta herramienta genera rúbricas de evaluación basadas en el{' '}
-                <strong>Decreto 58/2022</strong> de la Junta de Extremadura, por el que se establece
-                el currículo de las enseñanzas artísticas profesionales de Música en la Comunidad
-                Autónoma de Extremadura. Las competencias específicas, criterios de evaluación y
-                niveles de logro se ajustan a la normativa vigente.
+                <strong>Decreto 58/2022</strong> de la Junta de Extremadura. Utiliza el modelo{' '}
+                <strong>Qwen 3.0</strong> a través de Nebius Token Factory para generar rúbricas
+                personalizadas basadas en el currículo oficial de las enseñanzas artísticas
+                profesionales de Música.
               </p>
             </div>
           </div>
@@ -100,11 +152,53 @@ export default function App() {
                   Configuración de la Rúbrica
                 </h2>
                 <p className="text-indigo-100 text-sm mt-1">
-                  Seleccione la asignatura y el curso para generar la rúbrica de evaluación
+                  Seleccione el modo de generación, asignatura y curso
                 </p>
               </div>
 
               <div className="p-6 space-y-6">
+                {/* Mode Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    <i className="fas fa-cogs mr-2 text-indigo-600"></i>
+                    Modo de Generación
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setModoGeneracion('local')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        modoGeneracion === 'local'
+                          ? 'border-indigo-500 bg-indigo-50 shadow-md'
+                          : 'border-gray-200 bg-gray-50 hover:border-indigo-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <i className={`fas fa-database text-lg ${modoGeneracion === 'local' ? 'text-indigo-600' : 'text-gray-400'}`}></i>
+                        <span className="font-bold text-gray-800">Datos Locales</span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Rúbricas predefinidas basadas en el currículo oficial. Rápidas y sin conexión.
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => setModoGeneracion('api')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        modoGeneracion === 'api'
+                          ? 'border-purple-500 bg-purple-50 shadow-md'
+                          : 'border-gray-200 bg-gray-50 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <i className={`fas fa-robot text-lg ${modoGeneracion === 'api' ? 'text-purple-600' : 'text-gray-400'}`}></i>
+                        <span className="font-bold text-gray-800">IA con Qwen 3.0</span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Generación dinámica con inteligencia artificial. Personalizable y detallada.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Asignatura Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -121,20 +215,35 @@ export default function App() {
                   >
                     <option value="">— Seleccione una asignatura —</option>
                     {asignaturas.map((asig) => (
-                      <option key={asig.id} value={asig.id}>
+                      <option key={asig.id} value={asig.nombre}>
                         {asig.nombre}
                       </option>
                     ))}
                   </select>
+
+                  {modoGeneracion === 'api' && (
+                    <div className="mt-3">
+                      <label className="block text-xs text-gray-500 mb-1">
+                        O escriba una asignatura personalizada:
+                      </label>
+                      <input
+                        type="text"
+                        value={customAsignatura}
+                        onChange={(e) => setCustomAsignatura(e.target.value)}
+                        placeholder="Ej: Orquesta, Análisis Musical, Fundamentos..."
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-gray-50 text-sm"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Curso Selection */}
-                {currentAsignatura && (
-                  <div className="animate-fadeIn">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <i className="fas fa-graduation-cap mr-2 text-indigo-600"></i>
-                      Curso
-                    </label>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <i className="fas fa-graduation-cap mr-2 text-indigo-600"></i>
+                    Curso
+                  </label>
+                  {currentAsignatura && modoGeneracion === 'local' ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {currentAsignatura.cursos.map((curso) => (
                         <button
@@ -150,6 +259,51 @@ export default function App() {
                         </button>
                       ))}
                     </div>
+                  ) : (
+                    <div>
+                      {modoGeneracion === 'api' && (
+                        <div className="mb-3">
+                          <label className="block text-xs text-gray-500 mb-1">
+                            Escriba el curso:
+                          </label>
+                          <input
+                            type="text"
+                            value={customCurso}
+                            onChange={(e) => setCustomCurso(e.target.value)}
+                            placeholder="Ej: 1º, 2º, 3º, 4º, 5º, 6º..."
+                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-gray-50 text-sm"
+                          />
+                        </div>
+                      )}
+                      {selectedAsignatura && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {(currentAsignatura?.cursos || ['1º', '2º', '3º', '4º', '5º', '6º']).map((curso) => (
+                            <button
+                              key={curso}
+                              onClick={() => setSelectedCurso(curso)}
+                              className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                                selectedCurso === curso
+                                  ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-md'
+                                  : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50/50'
+                              }`}
+                            >
+                              {curso}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                    <i className="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                    <div>
+                      <p className="text-red-700 text-sm font-medium">Error</p>
+                      <p className="text-red-600 text-xs mt-1">{error}</p>
+                    </div>
                   </div>
                 )}
 
@@ -157,15 +311,28 @@ export default function App() {
                 <div className="pt-4 border-t border-gray-100">
                   <button
                     onClick={handleGenerate}
-                    disabled={!selectedAsignatura || !selectedCurso}
+                    disabled={loading || (!selectedAsignatura && !customAsignatura) || (!selectedCurso && !customCurso)}
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${
-                      selectedAsignatura && selectedCurso
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                      loading
+                        ? 'bg-gray-300 text-gray-500 cursor-wait'
+                        : (selectedAsignatura || customAsignatura) && (selectedCurso || customCurso)
+                        ? modoGeneracion === 'api'
+                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                          : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <i className="fas fa-magic"></i>
-                    Generar Rúbrica de Evaluación
+                    {loading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin"></i>
+                        Generando rúbrica con IA...
+                      </>
+                    ) : (
+                      <>
+                        <i className={`fas ${modoGeneracion === 'api' ? 'fa-robot' : 'fa-magic'}`}></i>
+                        {modoGeneracion === 'api' ? 'Generar con IA (Qwen 3.0)' : 'Generar Rúbrica'}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -198,12 +365,12 @@ export default function App() {
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-purple-100 p-2 rounded-lg">
-                    <i className="fas fa-tools text-purple-600"></i>
+                    <i className="fas fa-brain text-purple-600"></i>
                   </div>
-                  <h3 className="font-semibold text-gray-800 text-sm">Instrumentos</h3>
+                  <h3 className="font-semibold text-gray-800 text-sm">IA Qwen 3.0</h3>
                 </div>
                 <p className="text-gray-500 text-xs">
-                  Sugerencias de instrumentos de evaluación
+                  Generación inteligente vía Nebius Token Factory
                 </p>
               </div>
             </div>
@@ -220,188 +387,204 @@ export default function App() {
                 <i className="fas fa-arrow-left"></i>
                 <span className="text-sm font-medium">Volver</span>
               </button>
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
-              >
-                <i className="fas fa-print"></i>
-                <span className="text-sm font-medium">Imprimir / Exportar PDF</span>
-              </button>
+              <div className="flex gap-3">
+                {modoGeneracion === 'api' && (
+                  <span className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-purple-700 text-xs font-medium">
+                    <i className="fas fa-robot"></i>
+                    Generado con Qwen 3.0
+                  </span>
+                )}
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+                >
+                  <i className="fas fa-print"></i>
+                  <span className="text-sm font-medium">Imprimir / PDF</span>
+                </button>
+              </div>
             </div>
 
-            {/* Rubric Title */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-6">
-              <div className="bg-gradient-to-r from-indigo-900 to-purple-900 px-6 py-5">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  Rúbrica de Evaluación — {currentAsignatura?.nombre}, {selectedCurso}
-                </h2>
-                <p className="text-indigo-200 text-sm mt-1">
-                  Enseñanzas Profesionales de Música — Comunidad Autónoma de Extremadura
-                </p>
-                <p className="text-indigo-300 text-xs mt-1">
-                  Decreto 58/2022 — Curso académico 2024/2025
-                </p>
-              </div>
-
-              {/* Competencias Específicas */}
-              <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <i className="fas fa-star text-amber-500"></i>
-                  Competencias Específicas
-                </h3>
-                <div className="space-y-3">
-                  {currentAsignatura?.competencias.map((comp) => (
-                    <div
-                      key={comp.id}
-                      className="bg-indigo-50 rounded-lg p-4 border border-indigo-100"
-                    >
-                      <p className="font-semibold text-indigo-900 text-sm">
-                        {comp.id}: {comp.descripcion}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {comp.descriptores.map((desc, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-white text-indigo-700 text-xs px-2 py-1 rounded-full border border-indigo-200"
-                          >
-                            {desc}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+            {/* Rubric Content */}
+            {modoGeneracion === 'api' && apiRubric ? (
+              <RubricRenderer
+                content={apiRubric.rubrica}
+                asignatura={apiRubric.asignatura}
+                curso={apiRubric.curso}
+              />
+            ) : (
+              /* Local Rubric */
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-indigo-900 to-purple-900 px-6 py-5">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">
+                    Rúbrica de Evaluación — {currentAsignatura?.nombre}, {selectedCurso}
+                  </h2>
+                  <p className="text-indigo-200 text-sm mt-1">
+                    Enseñanzas Profesionales de Música — Comunidad Autónoma de Extremadura
+                  </p>
+                  <p className="text-indigo-300 text-xs mt-1">
+                    Decreto 58/2022 — Datos del currículo oficial
+                  </p>
                 </div>
-              </div>
 
-              {/* Niveles de Logro */}
-              <div className="p-6 border-b border-gray-100 bg-gray-50">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <i className="fas fa-layer-group text-blue-500"></i>
-                  Niveles de Logro
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {nivelesLogro.map((nivel) => (
-                    <div
-                      key={nivel.nombre}
-                      className="rounded-lg p-3 border-2 text-center"
-                      style={{ borderColor: nivel.color, backgroundColor: `${nivel.color}10` }}
-                    >
+                {/* Competencias Específicas */}
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-star text-amber-500"></i>
+                    Competencias Específicas
+                  </h3>
+                  <div className="space-y-3">
+                    {currentAsignatura?.competencias.map((comp) => (
                       <div
-                        className="font-bold text-sm mb-1"
-                        style={{ color: nivel.color }}
+                        key={comp.id}
+                        className="bg-indigo-50 rounded-lg p-4 border border-indigo-100"
                       >
-                        {nivel.nombre}
-                      </div>
-                      <p className="text-xs text-gray-600">{nivel.descripcion}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Criterios e Indicadores */}
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <i className="fas fa-clipboard-check text-green-500"></i>
-                  Criterios de Evaluación e Indicadores de Logro
-                </h3>
-
-                {currentAsignatura?.competencias.map((comp) => {
-                  const criterios = getCriteriosByCompetencia(comp.id);
-                  if (criterios.length === 0) return null;
-
-                  return (
-                    <div key={comp.id} className="mb-8">
-                      <div className="bg-indigo-100 rounded-t-lg px-4 py-2 border border-indigo-200">
-                        <h4 className="font-bold text-indigo-900 text-sm">
+                        <p className="font-semibold text-indigo-900 text-sm">
                           {comp.id}: {comp.descripcion}
-                        </h4>
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {comp.descriptores.map((desc, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-white text-indigo-700 text-xs px-2 py-1 rounded-full border border-indigo-200"
+                            >
+                              {desc}
+                            </span>
+                          ))}
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
 
-                      <div className="border border-gray-200 rounded-b-lg overflow-hidden">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="bg-gray-100">
-                              <th className="text-left px-3 py-2 font-semibold text-gray-700 w-48 border-r border-gray-200">
-                                Criterio
-                              </th>
-                              {nivelesLogro.map((nivel) => (
-                                <th
-                                  key={nivel.nombre}
-                                  className="text-center px-2 py-2 font-semibold border-r border-gray-200 last:border-r-0"
-                                  style={{ color: nivel.color }}
-                                >
-                                  {nivel.nombre}
+                {/* Niveles de Logro */}
+                <div className="p-6 border-b border-gray-100 bg-gray-50">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-layer-group text-blue-500"></i>
+                    Niveles de Logro
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {nivelesLogro.map((nivel) => (
+                      <div
+                        key={nivel.nombre}
+                        className="rounded-lg p-3 border-2 text-center"
+                        style={{ borderColor: nivel.color, backgroundColor: `${nivel.color}10` }}
+                      >
+                        <div
+                          className="font-bold text-sm mb-1"
+                          style={{ color: nivel.color }}
+                        >
+                          {nivel.nombre}
+                        </div>
+                        <p className="text-xs text-gray-600">{nivel.descripcion}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Criterios e Indicadores */}
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-clipboard-check text-green-500"></i>
+                    Criterios de Evaluación e Indicadores de Logro
+                  </h3>
+
+                  {currentAsignatura?.competencias.map((comp) => {
+                    const criterios = getCriteriosByCompetencia(comp.id);
+                    if (criterios.length === 0) return null;
+
+                    return (
+                      <div key={comp.id} className="mb-8">
+                        <div className="bg-indigo-100 rounded-t-lg px-4 py-2 border border-indigo-200">
+                          <h4 className="font-bold text-indigo-900 text-sm">
+                            {comp.id}: {comp.descripcion}
+                          </h4>
+                        </div>
+
+                        <div className="border border-gray-200 rounded-b-lg overflow-hidden">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="text-left px-3 py-2 font-semibold text-gray-700 w-48 border-r border-gray-200">
+                                  Criterio
                                 </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {criterios.map((criterio, idx) => (
-                              <tr
-                                key={criterio.id}
-                                className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                              >
-                                <td className="px-3 py-3 border-r border-gray-200 align-top">
-                                  <span className="font-medium text-gray-800 text-xs">
-                                    {criterio.id}
-                                  </span>
-                                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                                    {criterio.descripcion}
-                                  </p>
-                                </td>
                                 {nivelesLogro.map((nivel) => (
-                                  <td
+                                  <th
                                     key={nivel.nombre}
-                                    className="px-2 py-3 border-r border-gray-200 last:border-r-0 align-top"
+                                    className="text-center px-2 py-2 font-semibold border-r border-gray-200 last:border-r-0"
+                                    style={{ color: nivel.color }}
                                   >
-                                    <p className="text-xs text-gray-700 leading-relaxed">
-                                      {generarIndicadores(
-                                        currentAsignatura?.id || '',
-                                        criterio.id,
-                                        nivel.nombre
-                                      )}
-                                    </p>
-                                  </td>
+                                    {nivel.nombre}
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {criterios.map((criterio, idx) => (
+                                <tr
+                                  key={criterio.id}
+                                  className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                                >
+                                  <td className="px-3 py-3 border-r border-gray-200 align-top">
+                                    <span className="font-medium text-gray-800 text-xs">
+                                      {criterio.id}
+                                    </span>
+                                    <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                      {criterio.descripcion}
+                                    </p>
+                                  </td>
+                                  {nivelesLogro.map((nivel) => (
+                                    <td
+                                      key={nivel.nombre}
+                                      className="px-2 py-3 border-r border-gray-200 last:border-r-0 align-top"
+                                    >
+                                      <p className="text-xs text-gray-700 leading-relaxed">
+                                        {generarIndicadores(
+                                          currentAsignatura?.id || '',
+                                          criterio.id,
+                                          nivel.nombre
+                                        )}
+                                      </p>
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
 
-              {/* Instrumentos de Evaluación */}
-              <div className="p-6 border-t border-gray-100 bg-amber-50">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <i className="fas fa-tools text-amber-600"></i>
-                  Instrumentos de Evaluación Sugeridos
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {currentAsignatura?.instrumentos.map((inst, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-white text-amber-800 text-sm px-3 py-2 rounded-lg border border-amber-200 shadow-sm"
-                    >
-                      <i className="fas fa-check-circle text-amber-500 mr-2"></i>
-                      {inst}
-                    </span>
-                  ))}
+                {/* Instrumentos de Evaluación */}
+                <div className="p-6 border-t border-gray-100 bg-amber-50">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-tools text-amber-600"></i>
+                    Instrumentos de Evaluación Sugeridos
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {currentAsignatura?.instrumentos.map((inst, idx) => (
+                      <span
+                        key={idx}
+                        className="bg-white text-amber-800 text-sm px-3 py-2 rounded-lg border border-amber-200 shadow-sm"
+                      >
+                        <i className="fas fa-check-circle text-amber-500 mr-2"></i>
+                        {inst}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer Note */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 text-center">
+                    Documento generado conforme al Decreto 58/2022 de la Junta de Extremadura.
+                    <br />
+                    Las rúbricas son orientativas y deben adaptarse al contexto específico del aula y del alumnado.
+                  </p>
                 </div>
               </div>
-            </div>
-
-            {/* Footer Note */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 text-center print:border-0">
-              <p className="text-xs text-gray-500">
-                Documento generado conforme al Decreto 58/2022 de la Junta de Extremadura.
-                <br />
-                Las rúbricas son orientativas y deben adaptarse al contexto específico del aula y
-                del alumnado.
-              </p>
-            </div>
+            )}
           </div>
         )}
       </main>
@@ -415,6 +598,10 @@ export default function App() {
           </p>
           <p className="text-xs mt-2 text-gray-500">
             Basado en el Decreto 58/2022 — Comunidad Autónoma de Extremadura
+          </p>
+          <p className="text-xs mt-1 text-gray-600">
+            <i className="fas fa-robot mr-1 text-purple-400"></i>
+            Powered by Qwen 3.0 via Nebius Token Factory
           </p>
         </div>
       </footer>
