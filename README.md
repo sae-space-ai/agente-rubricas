@@ -8,7 +8,8 @@ Aplicación web para generar rúbricas de evaluación de las Enseñanzas Profesi
 - **Modo IA**: Generación dinámica con Qwen 3.0 a través de Nebius Token Factory
 - **7 Asignaturas**: Lenguaje Musical, Instrumento Principal, Coro, Música de Cámara, Armonía, Historia de la Música, Coro/Instrumento Complementario
 - **4 Niveles de Logro**: Inicial, En Desarrollo, Adquirido, Avanzado
-- **Exportación**: Impresión y exportación a PDF
+- **Exportación múltiple**: Excel (XLSX), Word (DOCX) y PDF
+- **Impresión**: Optimizada para impresión directa desde el navegador
 
 ## Estructura del Proyecto
 
@@ -66,6 +67,16 @@ El frontend utiliza:
 - **React 18** con TypeScript
 - **Tailwind CSS v4** para estilos
 - **Vite** como build tool
+
+### Módulo de Exportación
+
+El sistema incluye un módulo completo de exportación de informes en tres formatos:
+
+- **Excel (XLSX)**: Generado con SheetJS. Incluye todas las secciones de la rúbrica en formato tabular con anchos de columna optimizados.
+- **Word (DOCX)**: Generado con la librería `docx`. Documento formateado con tablas, estilos y estructura profesional.
+- **PDF**: Generado con jsPDF + autotable. Documento con paginación automática, tablas estilizadas y formato A4.
+
+**Code-Splitting**: Las librerías de exportación se cargan dinámicamente (lazy loading) para optimizar el rendimiento de la aplicación principal.
 
 ## Despliegue en Vercel
 
@@ -147,11 +158,46 @@ uvicorn api.index:app --reload
 - **Frontend:** React 18, TypeScript, Tailwind CSS v4, Vite
 - **Backend:** FastAPI, Python 3.9+
 - **IA:** Qwen 3.0 (Qwen3-30B-A3B-Instruct-2507) via Nebius Token Factory
+- **Exportación:** SheetJS (XLSX), docx (Word), jsPDF + autotable (PDF)
 - **Despliegue:** Vercel (frontend + serverless functions)
 
 ## Marco Normativo
 
 Basado en el **Decreto 58/2022** de la Junta de Extremadura, por el que se establece el currículo de las enseñanzas artísticas profesionales de Música.
+
+## Módulo de Exportación
+
+### Uso
+
+Una vez generada la rúbrica (en modo local), aparecerá un panel de exportación con tres botones:
+
+1. **Excel (XLSX)** - Genera un archivo `.xlsx` con todas las secciones de la rúbrica organizadas en hojas de cálculo
+2. **Word (DOCX)** - Genera un documento `.docx` formateado profesionalmente con tablas y estilos
+3. **PDF** - Genera un documento `.pdf` con paginación automática y tablas estilizadas
+
+### Características de la exportación
+
+- **Nombre de archivo**: `Rubrica_[Asignatura]_[Curso].[extensión]`
+- **Contenido completo**: Competencias, criterios, indicadores, niveles de logro e instrumentos de evaluación
+- **Formato profesional**: Tablas con bordes, colores y anchos optimizados
+- **Code-splitting**: Las librerías se cargan solo cuando se necesitan, optimizando el rendimiento
+
+### Ejemplo de uso programático
+
+```typescript
+import { exportToXLSX, exportToWord, exportToPDF } from './services/exportService';
+
+const data = { asignatura: asignaturaData, curso: '3º' };
+
+// Exportar a Excel
+await exportToXLSX(data);
+
+// Exportar a Word
+await exportToWord(data);
+
+// Exportar a PDF
+await exportToPDF(data);
+```
 
 ## Correcciones Realizadas
 

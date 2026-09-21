@@ -8,6 +8,7 @@ import {
 } from './data/curriculum';
 import { generarRubrica, type RubricResponse } from './services/api';
 import RubricRenderer from './components/RubricRenderer';
+import ExportButtons from './components/ExportButtons';
 
 type ModoGeneracion = 'local' | 'api';
 
@@ -383,7 +384,7 @@ export default function App() {
                 <i className="fas fa-arrow-left"></i>
                 <span className="text-sm font-medium">Volver</span>
               </button>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 {modoGeneracion === 'api' && (
                   <span className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-purple-700 text-xs font-medium">
                     <i className="fas fa-robot"></i>
@@ -395,10 +396,23 @@ export default function App() {
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
                 >
                   <i className="fas fa-print"></i>
-                  <span className="text-sm font-medium">Imprimir / PDF</span>
+                  <span className="text-sm font-medium">Imprimir</span>
                 </button>
               </div>
             </div>
+
+            {/* Export Buttons - Solo para modo local */}
+            {modoGeneracion === 'local' && currentAsignatura && (
+              <div className="mb-6 print:hidden">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <i className="fas fa-download text-indigo-600"></i>
+                    Exportar Rúbrica
+                  </h3>
+                  <ExportButtons asignatura={currentAsignatura} curso={selectedCurso} />
+                </div>
+              </div>
+            )}
 
             {/* Rubric Content */}
             {modoGeneracion === 'api' && apiRubric ? (
