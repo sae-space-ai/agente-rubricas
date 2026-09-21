@@ -24,8 +24,9 @@ export default function App() {
   const [customCurso, setCustomCurso] = useState<string>('');
   const rubricRef = useRef<HTMLDivElement>(null);
 
+  // Buscar asignatura por nombre (ya que el select usa el nombre como valor)
   const currentAsignatura: AsignaturaData | undefined = asignaturas.find(
-    (a) => a.id === selectedAsignatura
+    (a) => a.nombre === selectedAsignatura
   );
 
   const handleGenerate = async () => {
@@ -35,10 +36,10 @@ export default function App() {
       }
     } else {
       // Modo API - usar Qwen
-      const asignatura = customAsignatura || selectedAsignatura;
-      const curso = customCurso || selectedCurso;
+      const asignaturaNombre = customAsignatura || selectedAsignatura;
+      const cursoNombre = customCurso || selectedCurso;
 
-      if (!asignatura || !curso) {
+      if (!asignaturaNombre || !cursoNombre) {
         setError('Por favor, indique la asignatura y el curso.');
         return;
       }
@@ -48,8 +49,8 @@ export default function App() {
 
       try {
         const response = await generarRubrica({
-          asignatura: asignatura,
-          curso: curso
+          asignatura: asignaturaNombre,
+          curso: cursoNombre
         });
         setApiRubric(response);
         setRubricGenerated(true);
@@ -84,12 +85,9 @@ export default function App() {
     return currentAsignatura.criterios.filter((c) => c.competenciaId === competenciaId);
   };
 
-  const displayAsignatura = modoGeneracion === 'api'
-    ? (customAsignatura || selectedAsignatura)
-    : selectedAsignatura;
-  const displayCurso = modoGeneracion === 'api'
-    ? (customCurso || selectedCurso)
-    : selectedCurso;
+  const canGenerate = modoGeneracion === 'local'
+    ? !!(selectedAsignatura && selectedCurso)
+    : !!(customAsignatura && customCurso);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -243,7 +241,7 @@ export default function App() {
                     <i className="fas fa-graduation-cap mr-2 text-indigo-600"></i>
                     Curso
                   </label>
-                  {currentAsignatura && modoGeneracion === 'local' ? (
+                  {modoGeneracion === 'local' && currentAsignatura ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {currentAsignatura.cursos.map((curso) => (
                         <button
@@ -259,40 +257,38 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-                  ) : (
+                  ) : modoGeneracion === 'api' ? (
                     <div>
-                      {modoGeneracion === 'api' && (
-                        <div className="mb-3">
-                          <label className="block text-xs text-gray-500 mb-1">
-                            Escriba el curso:
-                          </label>
-                          <input
-                            type="text"
-                            value={customCurso}
-                            onChange={(e) => setCustomCurso(e.target.value)}
-                            placeholder="Ej: 1º, 2º, 3º, 4º, 5º, 6º..."
-                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-gray-50 text-sm"
-                          />
-                        </div>
-                      )}
+                      <input
+                        type="text"
+                        value={customCurso}
+                        onChange={(e) => setCustomCurso(e.target.value)}
+                        placeholder="Ej: 1º, 2º, 3º, 4º, 5º, 6º..."
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all bg-gray-50 text-sm"
+                      />
                       {selectedAsignatura && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {(currentAsignatura?.cursos || ['1º', '2º', '3º', '4º', '5º', '6º']).map((curso) => (
-                            <button
-                              key={curso}
-                              onClick={() => setSelectedCurso(curso)}
-                              className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                                selectedCurso === curso
-                                  ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-md'
-                                  : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50/50'
-                              }`}
-                            >
-                              {curso}
-                            </button>
-                          ))}
+                        <div className="mt-3">
+                          <p className="text-xs text-gray-500 mb-2">O seleccione un curso estándar:</p>
+                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            {['1º', '2º', '3º', '4º', '5º', '6º'].map((curso) => (
+                              <button
+                                key={curso}
+                                onClick={() => setCustomCurso(curso)}
+                                className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                                  customCurso === curso
+                                    ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-md'
+                                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300'
+                                }`}
+                              >
+                                {curso}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">Seleccione primero una asignatura</p>
                   )}
                 </div>
 
@@ -311,11 +307,11 @@ export default function App() {
                 <div className="pt-4 border-t border-gray-100">
                   <button
                     onClick={handleGenerate}
-                    disabled={loading || (!selectedAsignatura && !customAsignatura) || (!selectedCurso && !customCurso)}
+                    disabled={loading || !canGenerate}
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${
                       loading
                         ? 'bg-gray-300 text-gray-500 cursor-wait'
-                        : (selectedAsignatura || customAsignatura) && (selectedCurso || customCurso)
+                        : canGenerate
                         ? modoGeneracion === 'api'
                           ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                           : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
@@ -501,55 +497,57 @@ export default function App() {
                         </div>
 
                         <div className="border border-gray-200 rounded-b-lg overflow-hidden">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="bg-gray-100">
-                                <th className="text-left px-3 py-2 font-semibold text-gray-700 w-48 border-r border-gray-200">
-                                  Criterio
-                                </th>
-                                {nivelesLogro.map((nivel) => (
-                                  <th
-                                    key={nivel.nombre}
-                                    className="text-center px-2 py-2 font-semibold border-r border-gray-200 last:border-r-0"
-                                    style={{ color: nivel.color }}
-                                  >
-                                    {nivel.nombre}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm min-w-[600px]">
+                              <thead>
+                                <tr className="bg-gray-100">
+                                  <th className="text-left px-3 py-2 font-semibold text-gray-700 w-48 border-r border-gray-200">
+                                    Criterio
                                   </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {criterios.map((criterio, idx) => (
-                                <tr
-                                  key={criterio.id}
-                                  className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                                >
-                                  <td className="px-3 py-3 border-r border-gray-200 align-top">
-                                    <span className="font-medium text-gray-800 text-xs">
-                                      {criterio.id}
-                                    </span>
-                                    <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                                      {criterio.descripcion}
-                                    </p>
-                                  </td>
                                   {nivelesLogro.map((nivel) => (
-                                    <td
+                                    <th
                                       key={nivel.nombre}
-                                      className="px-2 py-3 border-r border-gray-200 last:border-r-0 align-top"
+                                      className="text-center px-2 py-2 font-semibold border-r border-gray-200 last:border-r-0"
+                                      style={{ color: nivel.color }}
                                     >
-                                      <p className="text-xs text-gray-700 leading-relaxed">
-                                        {generarIndicadores(
-                                          currentAsignatura?.id || '',
-                                          criterio.id,
-                                          nivel.nombre
-                                        )}
-                                      </p>
-                                    </td>
+                                      {nivel.nombre}
+                                    </th>
                                   ))}
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {criterios.map((criterio, idx) => (
+                                  <tr
+                                    key={criterio.id}
+                                    className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                                  >
+                                    <td className="px-3 py-3 border-r border-gray-200 align-top">
+                                      <span className="font-medium text-gray-800 text-xs">
+                                        {criterio.id}
+                                      </span>
+                                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                        {criterio.descripcion}
+                                      </p>
+                                    </td>
+                                    {nivelesLogro.map((nivel) => (
+                                      <td
+                                        key={nivel.nombre}
+                                        className="px-2 py-3 border-r border-gray-200 last:border-r-0 align-top"
+                                      >
+                                        <p className="text-xs text-gray-700 leading-relaxed">
+                                          {generarIndicadores(
+                                            currentAsignatura?.id || '',
+                                            criterio.id,
+                                            nivel.nombre
+                                          )}
+                                        </p>
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     );

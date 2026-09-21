@@ -59,7 +59,7 @@ class RubricResponse(BaseModel):
     asignatura: str
     curso: str
 
-@app.post("/api/generar-rubrica")
+@app.post("/generar-rubrica")
 async def generar_rubrica(request: RubricRequest):
     try:
         response = client.chat.completions.create(
@@ -79,6 +79,6 @@ async def generar_rubrica(request: RubricRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/health")
+@app.get("/health")
 async def health():
     return {"status": "ok", "service": "Arquitecto de Rúbricas Musicales API"}

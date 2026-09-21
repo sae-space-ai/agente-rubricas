@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 interface RubricRendererProps {
   content: string;
@@ -9,7 +9,7 @@ interface RubricRendererProps {
 interface ParsedSection {
   title: string;
   content: string;
-  type: 'heading' | 'list' | 'paragraph' | 'table' | 'bold';
+  type: 'heading' | 'list' | 'paragraph';
 }
 
 function parseMarkdown(text: string): ParsedSection[] {
@@ -27,7 +27,7 @@ function parseMarkdown(text: string): ParsedSection[] {
         sections.push({
           title: currentTitle,
           content: currentContent.trim(),
-          type: currentTitle.startsWith('#') ? 'heading' : 'paragraph'
+          type: 'paragraph'
         });
       }
       currentTitle = line;
@@ -123,28 +123,46 @@ function getIconForSection(title: string): string {
   return 'fa-chevron-right';
 }
 
-function renderContent(content: string): JSX.Element {
+function renderContent(content: string): ReactNode {
   const lines = content.split('\n').filter(line => line.trim());
+
+  if (lines.length === 0) return null;
+
   const isList = lines.every(line =>
     line.startsWith('- ') || line.startsWith('* ') || /^\d+\./.test(line.trim())
   );
 
-  if (isList && lines.length > 0) {
+  if (isList) {
     const isOrdered = /^\d+\./.test(lines[0].trim());
-    const ListTag = isOrdered ? 'ol' : 'ul';
+
+    if (isOrdered) {
+      return (
+        <ol className="list-decimal pl-6 space-y-2">
+          {lines.map((line, idx) => (
+            <li
+              key={idx}
+              className="text-gray-700 text-sm leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: renderInlineMarkdown(line.replace(/^\d+\.\s+/, ''))
+              }}
+            />
+          ))}
+        </ol>
+      );
+    }
 
     return (
-      <ListTag className={`${isOrdered ? 'list-decimal' : 'list-disc'} pl-6 space-y-2`}>
+      <ul className="list-disc pl-6 space-y-2">
         {lines.map((line, idx) => (
           <li
             key={idx}
             className="text-gray-700 text-sm leading-relaxed"
             dangerouslySetInnerHTML={{
-              __html: renderInlineMarkdown(line.replace(/^[-*]\s+|^\d+\.\s+/, ''))
+              __html: renderInlineMarkdown(line.replace(/^[-*]\s+/, ''))
             }}
           />
         ))}
-      </ListTag>
+      </ul>
     );
   }
 
