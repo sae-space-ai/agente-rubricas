@@ -1,113 +1,190 @@
 # Arquitecto de Rúbricas Musicales
 
-Aplicación web para generar rúbricas de evaluación de las Enseñanzas Artísticas de Música en Extremadura, España, basada en los Decretos 110/2007, 111/2007 y 54/2022.
+Sistema inteligente de generación de rúbricas de evaluación para las Enseñanzas Profesionales de Música en Extremadura, basado en la Programación Didáctica 2026/2027.
 
 ## 🎯 Características
 
-- **Dos niveles de enseñanza**: Enseñanzas Elementales y Profesionales
-- **Tres decretos oficiales**: 110/2007, 111/2007 y 54/2022 de Extremadura
-- **Generación dual**: Modo local (datos predefinidos) y modo IA (Qwen 3.0)
+- **3 Materias específicas**: Música de Cámara, Banda y Orquesta
+- **12 Criterios de evaluación** (CO-01 a CO-12)
+- **7 Competencias** (CM-1 a CM-7)
+- **4 Niveles de logro**: Inicial, En desarrollo, Adecuado, Consolidado
 - **Exportación múltiple**: Excel (XLSX), Word (DOCX) y PDF
-- **7 asignaturas**: Lenguaje Musical, Instrumento Principal, Coro, Música de Cámara, Armonía, Historia de la Música, Instrumento Complementario
+- **IA integrada**: Google Gemma 3 27B via Nebius Token Factory
+- **Validación automática**: Regla crítica para Música de Cámara (solo 4º, 5º, 6º)
 
-## 🚀 Despliegue en Vercel
+## 📚 Marco Normativo
 
-### Paso 1: Preparar el repositorio
+### Decreto 111/2007, de 22 de mayo
+Establece el currículo de las **Enseñanzas Profesionales de Música** de régimen especial en Extremadura.
 
-```bash
-# Clonar el repositorio
-git clone https://github.com/TU_USUARIO/mi-agente-rubricas.git
-cd mi-agente-rubricas
+### Programación Didáctica 2026/2027
+Define la estructura específica para:
+- **Música de Cámara**: Solo en 4º, 5º y 6º curso
+- **Banda**: Todos los cursos (1º a 6º)
+- **Orquesta**: Todos los cursos (1º a 6º)
 
-# Instalar dependencias
-npm install
+## 🎼 Estructura Curricular
 
-# Verificar que funciona localmente
-npm run dev
-```
+### Materias y Cursos
 
-### Paso 2: Configurar Vercel
+| Materia | Cursos Disponibles |
+|---------|-------------------|
+| Música de Cámara | 4º, 5º, 6º |
+| Banda | 1º, 2º, 3º, 4º, 5º, 6º |
+| Orquesta | 1º, 2º, 3º, 4º, 5º, 6º |
 
-1. **Crear cuenta en Vercel**: [https://vercel.com](https://vercel.com)
+### Competencias (CM-1 a CM-7)
 
-2. **Importar proyecto desde GitHub**:
-   - Ve a [https://vercel.com/new](https://vercel.com/new)
-   - Selecciona tu repositorio de GitHub
-   - Vercel detectará automáticamente que es un proyecto Vite
+- **CM-1**: Ejecución instrumental
+- **CM-2**: Competencia rítmica y de coordinación
+- **CM-3**: Competencia auditiva y de ajuste sonoro
+- **CM-4**: Competencia de interpretación musical
+- **CM-5**: Competencia de interacción musical
+- **CM-6**: Competencia de análisis y resolución musical
+- **CM-7**: Competencia de transferencia musical
 
-3. **Configurar variables de entorno**:
-   - En el dashboard de Vercel, ve a **Settings** → **Environment Variables**
-   - Añade la variable `NEBIUS_API_KEY` con tu clave de API de Nebius Token Factory
-   - Obtén tu API key en: [https://nebius.com/services/token-factory](https://nebius.com/services/token-factory)
+### Criterios de Evaluación (CO-01 a CO-12)
 
-4. **Desplegar**:
-   - Haz clic en **Deploy**
-   - Vercel construirá automáticamente el proyecto
+- **CO-01**: Preparación
+- **CO-02**: Ritmo y coordinación
+- **CO-03**: Escucha y ajuste
+- **CO-04**: Afinación y sonido
+- **CO-05**: Articulación y dinámica
+- **CO-06**: Balance y función
+- **CO-07**: Interpretación y discurso
+- **CO-08**: Adaptación
+- **CO-09**: Continuidad
+- **CO-10**: Resolución de problemas
+- **CO-11**: Autonomía y responsabilidad
+- **CO-12**: Revisión y transferencia
 
-### Paso 3: Verificar el despliegue
+### Niveles de Logro
 
-Una vez desplegado, tu aplicación estará disponible en:
-- **Frontend**: `https://tu-proyecto.vercel.app`
-- **API Health Check**: `https://tu-proyecto.vercel.app/api/health`
-- **Generar Rúbrica**: `https://tu-proyecto.vercel.app/api/generar-rubrica`
+| Nivel | Nombre | Descripción |
+|-------|--------|-------------|
+| 1 | Inicial | Dependencia del profesor, errores frecuentes, falta de autonomía |
+| 2 | En desarrollo | Comprensión básica con apoyo puntual del profesor |
+| 3 | Adecuado | Acción autónoma en situaciones habituales |
+| 4 | Consolidado | Anticipación, flexibilidad, resolución de situaciones nuevas y transferibilidad |
 
-## 🛠️ Desarrollo Local
+### Sistema de Puntuación
 
-### Requisitos
+- Cada criterio se puntúa de 1 a 4
+- Puntuación máxima = Número de criterios × 4
+- Nota final = (Total suma × 10) / Puntuación máxima
 
-- Node.js 18+ 
-- Python 3.9+
-- npm o yarn
+## 🚀 Instalación y Uso
+
+### Requisitos Previos
+
+- Node.js 18+ y npm
+- Cuenta en Nebius Token Factory
+- API Key de Nebius
 
 ### Instalación
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/TU_USUARIO/mi-agente-rubricas.git
+git clone <url-del-repositorio>
 cd mi-agente-rubricas
 
-# Instalar dependencias de Node.js
+# Instalar dependencias
 npm install
-
-# Instalar dependencias de Python
-pip install -r requirements.txt
 
 # Configurar variables de entorno
 cp .env.example .env
-# Edita .env y añade tu NEBIUS_API_KEY
-
-# Iniciar servidor de desarrollo
-npm run dev
+# Editar .env y añadir tu NEBIUS_API_KEY
 ```
 
-La aplicación estará disponible en `http://localhost:3000`
-
-### Comandos disponibles
+### Desarrollo Local
 
 ```bash
-# Desarrollo
-npm run dev          # Inicia el servidor de desarrollo
-npm run build        # Construye para producción
-npm run preview      # Previsualiza la build de producción
-npm run typecheck    # Verifica tipos TypeScript
+# Iniciar servidor de desarrollo
+npm run dev
+
+# La aplicación estará disponible en http://localhost:3000
 ```
 
-## 📋 Estructura del Proyecto
+### Build para Producción
+
+```bash
+# Generar build de producción
+npm run build
+
+# Los archivos se generan en dist/
+```
+
+## 🌐 Despliegue en Vercel
+
+### Paso 1: Preparar el Repositorio
+
+```bash
+# Inicializar git (si no lo has hecho)
+git init
+git add .
+git commit -m "Initial commit"
+
+# Crear rama main
+git branch -M main
+
+# Añadir remoto
+git remote add origin https://github.com/TU_USUARIO/mi-agente-rubricas.git
+git push -u origin main
+```
+
+### Paso 2: Configurar Vercel
+
+1. Ir a [vercel.com](https://vercel.com) e importar el repositorio
+2. Configurar las variables de entorno:
+   - `NEBIUS_API_KEY`: Tu clave API de Nebius Token Factory
+3. Desplegar el proyecto
+
+### Paso 3: Verificar el Despliegue
+
+- **Frontend**: `https://tu-proyecto.vercel.app`
+- **API Health**: `https://tu-proyecto.vercel.app/api/health`
+
+## 📖 Uso de la Aplicación
+
+### Modo Local (Datos Predefinidos)
+
+1. Seleccionar el **Modo de Generación**: "Datos Locales"
+2. Elegir la **Materia**: Música de Cámara, Banda o Orquesta
+3. Seleccionar el **Curso**: Según la materia elegida
+4. Hacer clic en **"Generar Rúbrica"**
+5. La rúbrica se genera instantáneamente con los 12 criterios y 4 niveles
+
+### Modo IA (Gemma 3)
+
+1. Seleccionar el **Modo de Generación**: "IA con Gemma 3"
+2. Elegir la **Materia** y el **Curso**
+3. Hacer clic en **"Generar con IA"**
+4. La IA genera una rúbrica personalizada basada en el superprompt
+
+### Exportación de Rúbricas
+
+Una vez generada la rúbrica en modo local, puedes exportarla en 3 formatos:
+
+- **🟢 Excel (XLSX)**: Hoja de cálculo con todos los datos
+- **🔵 Word (DOCX)**: Documento formateado profesionalmente
+- **🔴 PDF**: Documento con tablas y formato optimizado
+
+## 🛠️ Estructura del Proyecto
 
 ```
 mi-agente-rubricas/
 ├── api/
-│   └── index.py              # Backend FastAPI (Vercel Serverless Function)
+│   └── index.py              # Backend FastAPI con Gemma 3
 ├── src/
-│   ├── App.tsx               # Componente principal React
+│   ├── App.tsx               # Componente principal
 │   ├── components/
 │   │   ├── ExportButtons.tsx     # Botones de exportación
 │   │   └── RubricRenderer.tsx    # Renderizador de rúbricas IA
 │   ├── data/
-│   │   └── curriculum.ts         # Datos del currículo oficial
+│   │   └── curriculum.ts         # Datos del currículo (materias, criterios, competencias)
 │   ├── services/
 │   │   ├── api.ts                # Servicio de comunicación con API
-│   │   └── exportService.ts      # Servicio de exportación
+│   │   └── exportService.ts      # Servicio de exportación (XLSX, DOCX, PDF)
 │   ├── index.css
 │   ├── main.tsx
 │   └── vite-env.d.ts
@@ -118,26 +195,6 @@ mi-agente-rubricas/
 ├── vercel.json               # Configuración de Vercel
 └── vite.config.js
 ```
-
-## 📚 Marco Normativo
-
-### Decreto 110/2007, de 22 de mayo
-Regula el currículo de las **Enseñanzas Elementales de Música**:
-- Duración: 4 cursos
-- Asignaturas: Lenguaje Musical, Instrumento, Coro (3º y 4º)
-- Evaluación: "Apto" / "No Apto"
-
-### Decreto 54/2022, de 18 de mayo
-Modifica el Decreto 110/2007:
-- Adaptación a la LOMLOE
-- Incorporación de la especialidad de Órgano
-
-### Decreto 111/2007, de 22 de mayo
-Establece el currículo de las **Enseñanzas Profesionales de Música**:
-- Duración: 6 cursos
-- Asignaturas comunes: Instrumento, Música de Cámara, Coro, Lenguaje Musical
-- Otras: Armonía, Historia de la Música, Instrumento Complementario
-- Evaluación: Inicial, En Desarrollo, Adquirido, Avanzado
 
 ## 🔧 Tecnologías
 
@@ -153,10 +210,17 @@ Establece el currículo de las **Enseñanzas Profesionales de Música**:
 - **FastAPI** para la API REST
 - **Python 3.9+**
 - **OpenAI SDK** para comunicación con Nebius
-- **Qwen 3.0** (Qwen3-30B-A3B-Instruct-2507)
+- **Google Gemma 3 27B** como modelo de IA
 
 ### Despliegue
 - **Vercel** para hosting y serverless functions
+
+## 📝 Documentación Adicional
+
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Guía detallada de despliegue
+- [TESTING_EXPORTS.md](TESTING_EXPORTS.md) - Guía de prueba de exportaciones
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Guía para contribuidores
+- [CHANGELOG.md](CHANGELOG.md) - Registro de cambios
 
 ## 🐛 Solución de Problemas
 
@@ -171,29 +235,18 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### Error de build en Vercel
-- Verifica que `package.json` tenga el script `build`
-- Asegúrate de que `vercel.json` esté en la raíz del repositorio
-- Revisa los logs de build en el dashboard de Vercel
-
 ### La API no responde
 - Verifica que `requirements.txt` esté en la raíz
 - Comprueba que `api/index.py` exista
 - Revisa los logs de la función serverless en Vercel
 
-## 📝 Licencia
+## 📄 Licencia
 
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
+Este proyecto está bajo la licencia MIT.
 
-## 🤝 Contribuciones
+## 👥 Contribuciones
 
-Las contribuciones son bienvenidas. Por favor:
-
-1. Haz fork del proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+Las contribuciones son bienvenidas. Por favor, lee [CONTRIBUTING.md](CONTRIBUTING.md) para detalles sobre nuestro código de conducta y el proceso para enviar pull requests.
 
 ## 📧 Contacto
 
@@ -201,4 +254,5 @@ Para preguntas o soporte, abre un issue en GitHub.
 
 ---
 
-**Desarrollado para las Enseñanzas Artísticas de Música de Extremadura**
+**Desarrollado para las Enseñanzas Profesionales de Música de Extremadura**  
+**Programación Didáctica 2026/2027 - Música de Cámara, Banda y Orquesta**

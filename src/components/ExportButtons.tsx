@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import { exportToXLSX, exportToWord, exportToPDF, ExportData } from '../services/exportService';
-import { AsignaturaData } from '../data/curriculum';
+import { exportToXLSX, exportToWord, exportToPDF } from '../services/exportService';
+import { Materia, materias } from '../data/curriculum';
 
 interface ExportButtonsProps {
-  asignatura: AsignaturaData;
+  materia: Materia;
   curso: string;
 }
 
-export default function ExportButtons({ asignatura, curso }: ExportButtonsProps) {
+export default function ExportButtons({ materia, curso }: ExportButtonsProps) {
   const [exporting, setExporting] = useState<string | null>(null);
+
+  const materiaData = materias.find(m => m.id === materia);
+  const materiaNombre = materiaData?.nombre || materia;
 
   const handleExportXLSX = async () => {
     setExporting('xlsx');
     try {
-      const data: ExportData = { asignatura, curso };
-      await exportToXLSX(data);
+      await exportToXLSX(materia, curso);
     } catch (error) {
       console.error('Error al exportar a XLSX:', error);
       alert('Error al exportar a Excel. Por favor, inténtelo de nuevo.');
@@ -26,8 +28,7 @@ export default function ExportButtons({ asignatura, curso }: ExportButtonsProps)
   const handleExportWord = async () => {
     setExporting('word');
     try {
-      const data: ExportData = { asignatura, curso };
-      await exportToWord(data);
+      await exportToWord(materia, curso);
     } catch (error) {
       console.error('Error al exportar a Word:', error);
       alert('Error al exportar a Word. Por favor, inténtelo de nuevo.');
@@ -39,8 +40,7 @@ export default function ExportButtons({ asignatura, curso }: ExportButtonsProps)
   const handleExportPDF = async () => {
     setExporting('pdf');
     try {
-      const data: ExportData = { asignatura, curso };
-      await exportToPDF(data);
+      await exportToPDF(materia, curso);
     } catch (error) {
       console.error('Error al exportar a PDF:', error);
       alert('Error al exportar a PDF. Por favor, inténtelo de nuevo.');

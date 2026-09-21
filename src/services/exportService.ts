@@ -1,76 +1,76 @@
-import { AsignaturaData, getNivelesLogro, generarIndicadores } from '../data/curriculum';
-
-export interface ExportData {
-  asignatura: AsignaturaData;
-  curso: string;
-}
+import { 
+  nivelesLogro, 
+  criterios, 
+  competencias, 
+  instrumentosEvaluacion, 
+  generarDescriptor,
+  materias,
+  type Materia 
+} from '../data/curriculum';
 
 /**
  * Exporta la rúbrica a formato XLSX (Excel)
  */
-export async function exportToXLSX(data: ExportData): Promise<void> {
+export async function exportToXLSX(materia: Materia, curso: string): Promise<void> {
   const XLSX = await import('xlsx');
   const { saveAs } = await import('file-saver');
-  const { asignatura, curso } = data;
-  const nivelesLogro = getNivelesLogro(asignatura.nivel);
+
+  const materiaData = materias.find(m => m.id === materia);
+  const materiaNombre = materiaData?.nombre || materia;
 
   // Crear datos para la hoja
   const worksheetData: any[][] = [];
 
   // Título
-  worksheetData.push([`Rúbrica de Evaluación - ${asignatura.nombre}, ${curso}`]);
-  worksheetData.push([`Enseñanzas ${asignatura.nivel === 'elemental' ? 'Elementales' : 'Profesionales'} de Música - Extremadura`]);
-  worksheetData.push([asignatura.nivel === 'elemental'
-    ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
-    : 'Decreto 111/2007'
-  ]);
+  worksheetData.push([`Rúbrica de Evaluación - ${materiaNombre}, ${curso}`]);
+  worksheetData.push(['Enseñanzas Profesionales de Música - Extremadura']);
+  worksheetData.push(['Programación Didáctica 2026/2027 - Decreto 111/2007']);
   worksheetData.push([]);
 
-  // Competencias Específicas
-  worksheetData.push(['COMPETENCIAS ESPECÍFICAS']);
-  asignatura.competencias.forEach(comp => {
-    worksheetData.push([`${comp.id}: ${comp.descripcion}`]);
-    worksheetData.push(['Descriptores:', comp.descriptores.join(', ')]);
+  // Competencias
+  worksheetData.push(['COMPETENCIAS (CM-1 a CM-7)']);
+  competencias.forEach(comp => {
+    worksheetData.push([`${comp.id}: ${comp.nombre}`]);
+    worksheetData.push([comp.descripcion]);
     worksheetData.push([]);
   });
 
   // Niveles de Logro
   worksheetData.push(['NIVELES DE LOGRO']);
+  worksheetData.push(['Nivel', 'Nombre', 'Descripción']);
   nivelesLogro.forEach(nivel => {
-    worksheetData.push([nivel.nombre, nivel.descripcion]);
+    worksheetData.push([`Nivel ${nivel.nivel}`, nivel.nombre, nivel.descripcion]);
   });
   worksheetData.push([]);
 
   // Criterios e Indicadores
-  worksheetData.push(['CRITERIOS DE EVALUACIÓN E INDICADORES DE LOGRO']);
+  worksheetData.push(['CRITERIOS DE EVALUACIÓN (CO-01 a CO-12) E INDICADORES DE LOGRO']);
   worksheetData.push([]);
 
-  asignatura.competencias.forEach(comp => {
-    const criterios = asignatura.criterios.filter(c => c.competenciaId === comp.id);
+  // Encabezados de la tabla
+  worksheetData.push(['Criterio (CO)', ...nivelesLogro.map(n => `Nivel ${n.nivel}: ${n.nombre}`)]);
 
-    if (criterios.length > 0) {
-      worksheetData.push([`${comp.id}: ${comp.descripcion}`]);
-      worksheetData.push([]);
-
-      // Encabezados de la tabla
-      worksheetData.push(['Criterio', ...nivelesLogro.map(n => n.nombre)]);
-
-      // Filas de criterios
-      criterios.forEach(criterio => {
-        const row = [`${criterio.id}: ${criterio.descripcion}`];
-        nivelesLogro.forEach(nivel => {
-          row.push(generarIndicadores(asignatura.id, criterio.id, nivel.nombre));
-        });
-        worksheetData.push(row);
-      });
-
-      worksheetData.push([]);
-    }
+  // Filas de criterios
+  criterios.forEach(criterio => {
+    const row = [`${criterio.id}: ${criterio.nombre} - ${criterio.descripcion}`];
+    nivelesLogro.forEach(nivel => {
+      row.push(generarDescriptor(criterio.id, nivel.nivel, curso));
+    });
+    worksheetData.push(row);
   });
+
+  worksheetData.push([]);
+
+  // Sistema de Puntuación
+  worksheetData.push(['SISTEMA DE PUNTUACIÓN']);
+  worksheetData.push(['Cada criterio se puntúa de 1 a 4']);
+  worksheetData.push(['Puntuación máxima = Número de criterios × 4']);
+  worksheetData.push(['Nota final = (Total suma × 10) / Puntuación máxima']);
+  worksheetData.push([]);
 
   // Instrumentos de Evaluación
   worksheetData.push(['INSTRUMENTOS DE EVALUACIÓN SUGERIDOS']);
-  worksheetData.push([asignatura.instrumentos.join(', ')]);
+  worksheetData.push([instrumentosEvaluacion.join(', ')]);
 
   // Crear libro de trabajo
   const wb = XLSX.utils.book_new();
@@ -78,11 +78,11 @@ export async function exportToXLSX(data: ExportData): Promise<void> {
 
   // Ajustar anchos de columna
   ws['!cols'] = [
-    { wch: 40 },
-    { wch: 25 },
-    { wch: 25 },
-    { wch: 25 },
-    { wch: 25 }
+    { wch: 50 },
+    { wch: 30 },
+    { wch: 30 },
+    { wch: 30 },
+    { wch: 30 }
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, 'Rúbrica');
@@ -93,17 +93,18 @@ export async function exportToXLSX(data: ExportData): Promise<void> {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
 
-  saveAs(blob, `Rubrica_${asignatura.nombre.replace(/\s+/g, '_')}_${curso}.xlsx`);
+  saveAs(blob, `Rubrica_${materiaNombre.replace(/\s+/g, '_')}_${curso}.xlsx`);
 }
 
 /**
  * Exporta la rúbrica a formato Word (DOCX)
  */
-export async function exportToWord(data: ExportData): Promise<void> {
+export async function exportToWord(materia: Materia, curso: string): Promise<void> {
   const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } = await import('docx');
   const { saveAs } = await import('file-saver');
-  const { asignatura, curso } = data;
-  const nivelesLogro = getNivelesLogro(asignatura.nivel);
+
+  const materiaData = materias.find(m => m.id === materia);
+  const materiaNombre = materiaData?.nombre || materia;
 
   const children: any[] = [];
 
@@ -112,7 +113,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
     new Paragraph({
       children: [
         new TextRun({
-          text: `Rúbrica de Evaluación - ${asignatura.nombre}, ${curso}`,
+          text: `Rúbrica de Evaluación - ${materiaNombre}, ${curso}`,
           bold: true,
           size: 32,
         }),
@@ -122,7 +123,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
     new Paragraph({
       children: [
         new TextRun({
-          text: `Enseñanzas ${asignatura.nivel === 'elemental' ? 'Elementales' : 'Profesionales'} de Música - Extremadura`,
+          text: 'Enseñanzas Profesionales de Música - Extremadura',
           size: 24,
         }),
       ],
@@ -131,9 +132,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
     new Paragraph({
       children: [
         new TextRun({
-          text: asignatura.nivel === 'elemental'
-            ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
-            : 'Decreto 111/2007',
+          text: 'Programación Didáctica 2026/2027 - Decreto 111/2007',
           size: 20,
           italics: true,
         }),
@@ -142,12 +141,12 @@ export async function exportToWord(data: ExportData): Promise<void> {
     })
   );
 
-  // Competencias Específicas
+  // Competencias
   children.push(
     new Paragraph({
       children: [
         new TextRun({
-          text: 'COMPETENCIAS ESPECÍFICAS',
+          text: 'COMPETENCIAS (CM-1 a CM-7)',
           bold: true,
           size: 28,
         }),
@@ -156,21 +155,17 @@ export async function exportToWord(data: ExportData): Promise<void> {
     })
   );
 
-  asignatura.competencias.forEach(comp => {
+  competencias.forEach(comp => {
     children.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `${comp.id}: ${comp.descripcion}`, size: 22 }),
+          new TextRun({ text: `${comp.id}: ${comp.nombre}`, bold: true, size: 22 }),
         ],
-        spacing: { after: 100 },
+        spacing: { after: 50 },
       }),
       new Paragraph({
         children: [
-          new TextRun({
-            text: `Descriptores: ${comp.descriptores.join(', ')}`,
-            size: 20,
-            italics: true,
-          }),
+          new TextRun({ text: comp.descripcion, size: 20, italics: true }),
         ],
         spacing: { after: 200 },
       })
@@ -191,7 +186,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
     children.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `${nivel.nombre}: `, bold: true, size: 22 }),
+          new TextRun({ text: `Nivel ${nivel.nivel}: ${nivel.nombre} - `, bold: true, size: 22 }),
           new TextRun({ text: nivel.descripcion, size: 22 }),
         ],
         spacing: { after: 100 },
@@ -203,76 +198,88 @@ export async function exportToWord(data: ExportData): Promise<void> {
   children.push(
     new Paragraph({
       children: [
-        new TextRun({ text: 'CRITERIOS DE EVALUACIÓN E INDICADORES DE LOGRO', bold: true, size: 28 }),
+        new TextRun({ text: 'CRITERIOS DE EVALUACIÓN (CO-01 a CO-12) E INDICADORES DE LOGRO', bold: true, size: 28 }),
       ],
       spacing: { before: 400, after: 200 },
     })
   );
 
-  asignatura.competencias.forEach(comp => {
-    const criterios = asignatura.criterios.filter(c => c.competenciaId === comp.id);
+  // Crear tabla
+  const tableRows: any[] = [];
 
-    if (criterios.length > 0) {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: `${comp.id}: ${comp.descripcion}`, bold: true, size: 24 }),
-          ],
-          spacing: { before: 200, after: 200 },
-        })
-      );
-
-      // Crear tabla
-      const tableRows: any[] = [];
-
-      // Encabezado
-      tableRows.push(
-        new TableRow({
-          children: [
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: 'Criterio', bold: true, size: 20 })] })],
-              width: { size: 30, type: WidthType.PERCENTAGE },
-            }),
-            ...nivelesLogro.map(nivel =>
-              new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: nivel.nombre, bold: true, size: 20 })] })],
-                width: { size: 17.5, type: WidthType.PERCENTAGE },
-              })
-            ),
-          ],
-        })
-      );
-
-      // Filas de criterios
-      criterios.forEach(criterio => {
-        tableRows.push(
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: `${criterio.id}: ${criterio.descripcion}`, size: 18 })] })],
-                width: { size: 30, type: WidthType.PERCENTAGE },
-              }),
-              ...nivelesLogro.map(nivel =>
-                new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: generarIndicadores(asignatura.id, criterio.id, nivel.nombre), size: 18 })] })],
-                  width: { size: 17.5, type: WidthType.PERCENTAGE },
-                })
-              ),
-            ],
+  // Encabezado
+  tableRows.push(
+    new TableRow({
+      children: [
+        new TableCell({
+          children: [new Paragraph({ children: [new TextRun({ text: 'Criterio (CO)', bold: true, size: 20 })] })],
+          width: { size: 30, type: WidthType.PERCENTAGE },
+        }),
+        ...nivelesLogro.map(nivel =>
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: `Nivel ${nivel.nivel}: ${nivel.nombre}`, bold: true, size: 20 })] })],
+            width: { size: 17.5, type: WidthType.PERCENTAGE },
           })
-        );
-      });
+        ),
+      ],
+    })
+  );
 
-      children.push(
-        new Table({
-          rows: tableRows,
-          width: { size: 100, type: WidthType.PERCENTAGE },
-        })
-      );
-
-      children.push(new Paragraph({ children: [], spacing: { after: 200 } }));
-    }
+  // Filas de criterios
+  criterios.forEach(criterio => {
+    tableRows.push(
+      new TableRow({
+        children: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: `${criterio.id}: ${criterio.nombre}`, size: 18 })] })],
+            width: { size: 30, type: WidthType.PERCENTAGE },
+          }),
+          ...nivelesLogro.map(nivel =>
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: generarDescriptor(criterio.id, nivel.nivel, curso), size: 18 })] })],
+              width: { size: 17.5, type: WidthType.PERCENTAGE },
+            })
+          ),
+        ],
+      })
+    );
   });
+
+  children.push(
+    new Table({
+      rows: tableRows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+    })
+  );
+
+  children.push(new Paragraph({ children: [], spacing: { after: 200 } }));
+
+  // Sistema de Puntuación
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'SISTEMA DE PUNTUACIÓN', bold: true, size: 28 }),
+      ],
+      spacing: { before: 400, after: 200 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'Cada criterio se puntúa de 1 a 4', size: 22 }),
+      ],
+      spacing: { after: 100 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'Puntuación máxima = Número de criterios × 4', size: 22 }),
+      ],
+      spacing: { after: 100 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'Nota final = (Total suma × 10) / Puntuación máxima', size: 22 }),
+      ],
+    })
+  );
 
   // Instrumentos de Evaluación
   children.push(
@@ -284,7 +291,7 @@ export async function exportToWord(data: ExportData): Promise<void> {
     }),
     new Paragraph({
       children: [
-        new TextRun({ text: asignatura.instrumentos.join(', '), size: 22 }),
+        new TextRun({ text: instrumentosEvaluacion.join(', '), size: 22 }),
       ],
     })
   );
@@ -296,17 +303,18 @@ export async function exportToWord(data: ExportData): Promise<void> {
 
   // Generar blob y descargar
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `Rubrica_${asignatura.nombre.replace(/\s+/g, '_')}_${curso}.docx`);
+  saveAs(blob, `Rubrica_${materiaNombre.replace(/\s+/g, '_')}_${curso}.docx`);
 }
 
 /**
  * Exporta la rúbrica a formato PDF
  */
-export async function exportToPDF(data: ExportData): Promise<void> {
+export async function exportToPDF(materia: Materia, curso: string): Promise<void> {
   const { default: jsPDF } = await import('jspdf');
   await import('jspdf-autotable');
-  const { asignatura, curso } = data;
-  const nivelesLogro = getNivelesLogro(asignatura.nivel);
+
+  const materiaData = materias.find(m => m.id === materia);
+  const materiaNombre = materiaData?.nombre || materia;
 
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -320,45 +328,39 @@ export async function exportToPDF(data: ExportData): Promise<void> {
   yPosition += 8;
 
   doc.setFontSize(16);
-  doc.text(`${asignatura.nombre}, ${curso}`, margin, yPosition);
+  doc.text(`${materiaNombre}, ${curso}`, margin, yPosition);
   yPosition += 10;
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Enseñanzas ${asignatura.nivel === 'elemental' ? 'Elementales' : 'Profesionales'} de Música - Extremadura`, margin, yPosition);
+  doc.text('Enseñanzas Profesionales de Música - Extremadura', margin, yPosition);
   yPosition += 5;
-  doc.text(asignatura.nivel === 'elemental'
-    ? 'Decreto 110/2007 (modificado por Decreto 54/2022)'
-    : 'Decreto 111/2007', margin, yPosition);
+  doc.text('Programación Didáctica 2026/2027 - Decreto 111/2007', margin, yPosition);
   yPosition += 15;
 
-  // Competencias Específicas
+  // Competencias
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('COMPETENCIAS ESPECÍFICAS', margin, yPosition);
+  doc.text('COMPETENCIAS (CM-1 a CM-7)', margin, yPosition);
   yPosition += 8;
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
 
-  asignatura.competencias.forEach(comp => {
+  competencias.forEach(comp => {
     if (yPosition > 270) {
       doc.addPage();
       yPosition = 20;
     }
 
-    const compText = doc.splitTextToSize(`${comp.id}: ${comp.descripcion}`, pageWidth - 2 * margin);
-    doc.text(compText, margin, yPosition);
-    yPosition += compText.length * 5 + 2;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${comp.id}: ${comp.nombre}`, margin, yPosition);
+    yPosition += 5;
 
-    doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
-    const descText = doc.splitTextToSize(`Descriptores: ${comp.descriptores.join(', ')}`, pageWidth - 2 * margin);
+    const descText = doc.splitTextToSize(comp.descripcion, pageWidth - 2 * margin);
     doc.text(descText, margin, yPosition);
-    yPosition += descText.length * 4 + 5;
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    yPosition += descText.length * 5 + 5;
   });
 
   // Niveles de Logro
@@ -383,7 +385,7 @@ export async function exportToPDF(data: ExportData): Promise<void> {
     }
 
     doc.setFont('helvetica', 'bold');
-    doc.text(`${nivel.nombre}:`, margin, yPosition);
+    doc.text(`Nivel ${nivel.nivel}: ${nivel.nombre}`, margin, yPosition);
 
     doc.setFont('helvetica', 'normal');
     const nivelText = doc.splitTextToSize(nivel.descripcion, pageWidth - 2 * margin - 30);
@@ -400,59 +402,63 @@ export async function exportToPDF(data: ExportData): Promise<void> {
   yPosition += 5;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('CRITERIOS DE EVALUACIÓN E INDICADORES DE LOGRO', margin, yPosition);
+  doc.text('CRITERIOS DE EVALUACIÓN (CO-01 a CO-12) E INDICADORES', margin, yPosition);
   yPosition += 10;
 
-  asignatura.competencias.forEach(comp => {
-    const criterios = asignatura.criterios.filter(c => c.competenciaId === comp.id);
-
-    if (criterios.length > 0) {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      const compTitle = doc.splitTextToSize(`${comp.id}: ${comp.descripcion}`, pageWidth - 2 * margin);
-      doc.text(compTitle, margin, yPosition);
-      yPosition += compTitle.length * 5 + 5;
-
-      // Crear tabla con autotable
-      const tableData = criterios.map(criterio => {
-        return [
-          `${criterio.id}: ${criterio.descripcion}`,
-          ...nivelesLogro.map(nivel => generarIndicadores(asignatura.id, criterio.id, nivel.nombre))
-        ];
-      });
-
-      (doc as any).autoTable({
-        startY: yPosition,
-        head: [['Criterio', ...nivelesLogro.map(n => n.nombre)]],
-        body: tableData,
-        margin: { left: margin, right: margin },
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-          overflow: 'linebreak',
-        },
-        headStyles: {
-          fillColor: [79, 70, 229],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        columnStyles: {
-          0: { cellWidth: 50 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 35 },
-          4: { cellWidth: 35 },
-        },
-      });
-
-      yPosition = (doc as any).lastAutoTable.finalY + 10;
-    }
+  // Crear tabla con autotable
+  const tableData = criterios.map(criterio => {
+    return [
+      `${criterio.id}: ${criterio.nombre}`,
+      ...nivelesLogro.map(nivel => generarDescriptor(criterio.id, nivel.nivel, curso))
+    ];
   });
+
+  (doc as any).autoTable({
+    startY: yPosition,
+    head: [['Criterio (CO)', ...nivelesLogro.map(n => `Nivel ${n.nivel}: ${n.nombre}`)]],
+    body: tableData,
+    margin: { left: margin, right: margin },
+    styles: {
+      fontSize: 7,
+      cellPadding: 2,
+      overflow: 'linebreak',
+    },
+    headStyles: {
+      fillColor: [79, 70, 229],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 45 },
+      1: { cellWidth: 35 },
+      2: { cellWidth: 35 },
+      3: { cellWidth: 35 },
+      4: { cellWidth: 35 },
+    },
+  });
+
+  yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+  // Sistema de Puntuación
+  if (yPosition > 250) {
+    doc.addPage();
+    yPosition = 20;
+  }
+
+  yPosition += 5;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SISTEMA DE PUNTUACIÓN', margin, yPosition);
+  yPosition += 8;
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Cada criterio se puntúa de 1 a 4', margin, yPosition);
+  yPosition += 5;
+  doc.text('Puntuación máxima = Número de criterios × 4', margin, yPosition);
+  yPosition += 5;
+  doc.text('Nota final = (Total suma × 10) / Puntuación máxima', margin, yPosition);
+  yPosition += 10;
 
   // Instrumentos de Evaluación
   if (yPosition > 250) {
@@ -468,9 +474,9 @@ export async function exportToPDF(data: ExportData): Promise<void> {
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  const instText = doc.splitTextToSize(asignatura.instrumentos.join(', '), pageWidth - 2 * margin);
+  const instText = doc.splitTextToSize(instrumentosEvaluacion.join(', '), pageWidth - 2 * margin);
   doc.text(instText, margin, yPosition);
 
   // Guardar PDF
-  doc.save(`Rubrica_${asignatura.nombre.replace(/\s+/g, '_')}_${curso}.pdf`);
+  doc.save(`Rubrica_${materiaNombre.replace(/\s+/g, '_')}_${curso}.pdf`);
 }
